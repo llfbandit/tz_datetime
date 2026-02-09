@@ -4,17 +4,23 @@ name: TzDatetimeBindings
 description: Bindings for tz_datetime darwin
 
 language: objc
-output: 'lib/native/tz_datetime_bindings.dart'
+output:
+  bindings: 'lib/native/tz_datetime_bindings.dart'
+
 exclude-all-by-default: true
 
 objc-interfaces:
   include:
-    - 'TzDatetimeDarwin'
-  module:
-    'TzDatetimeDarwin': 'tz_datetime_darwin_module'
+    - NSTimeZone
+  member-filter:
+    NSTimeZone:
+      include:
+        - "timeZoneWithName:"
+        - "knownTimeZoneNames"
+        - "secondsFromGMTForDate:"
 
 headers:
   entry-points:
-    - 'src/third_party/tz_datetime_darwin_api.h'
+    - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSTimeZone.h"
 
 preamble: |

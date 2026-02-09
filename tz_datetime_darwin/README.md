@@ -1,18 +1,31 @@
-Swift APIs can be made compatible with Objective-C, using the @objc annotation.
+# tz_datetime_darwin
 
-Then you can use the swiftc tool to build a dylib for the library using -emit-library, and generate an Objective-C wrapper header using -emit-objc-header-path filename.h:
+iOS/macOS implementation of the `tz_datetime` package.
 
-```shell
-swiftc -c src/tz_datetime_darwin.swift                           \
-    -module-name tz_datetime_darwin_module                       \
-    -emit-objc-header-path third_party/tz_datetime_darwin_api.h  \
-    -emit-library -o tz_datetime_darwin.dylib
-```
+## Overview
 
-This should generate tz_datetime_darwin.dylib and tz_datetime_darwin_api.h.
+This package provides the iOS/macOS-specific implementation for the `tz_datetime` package, which offers timezone-aware datetime functionality for Flutter/Dart applications. It leverages native iOS/macOS APIs for timezone operations.
 
-Once you have an Objective-C wrapper header, FFIgen can parse it like any other header:
+## Features
 
-```shell
-dart run ffigen --config ffigen.yaml
-```
+- iOS/macOS-specific timezone implementation for the `tz_datetime` package
+- Integration with native iOS/macOS timezone APIs
+- Seamless integration with the cross-platform `tz_datetime` API
+- Consistent behavior across different macOS versions
+
+## Usage
+
+This package is used internally by `tz_datetime` when running on iOS/macOS platforms. Developers typically interact with the main `tz_datetime` package rather than this platform-specific implementation directly.
+
+For general usage instructions, refer to the main [`tz_datetime`](https://pub.dev/packages/tz_datetime) package documentation.
+
+## Implementation Details
+
+- Leverages native iOS/macOS timezone APIs for accurate timezone operations
+- Maintains compatibility with the broader `tz_datetime` ecosystem
+- Follows the same API patterns as other platform implementations
+- Optimized for iOS/macOS's timezone database and system services
+
+## Contributing
+
+Issues and pull requests should be directed to the main [`tz_datetime`](https://github.com/your-repo/tz_datetime) repository.
