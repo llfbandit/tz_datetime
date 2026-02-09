@@ -1,0 +1,20 @@
+name: tz_datetime_platform_interface
+description: A common interface for the tz_datetime package to call dedicated platform methods.
+version: 1.0.0
+
+resolution: workspace
+
+environment:
+  sdk: ^3.9.0
+  flutter: ">=3.24.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  plugin_platform_interface: ^2.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

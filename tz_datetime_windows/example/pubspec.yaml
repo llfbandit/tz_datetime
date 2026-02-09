@@ -1,0 +1,22 @@
+name: tz_datetime_windows_example
+description: "Demonstrates how to use the tz_datetime plugin."
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+resolution: workspace
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  tz_datetime_windows: any
+
+dev_dependencies:
+  integration_test:
+    sdk: flutter
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0

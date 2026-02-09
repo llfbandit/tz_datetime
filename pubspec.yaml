@@ -1,0 +1,44 @@
+name: tz_datetime_workspace
+
+environment:
+  sdk: ^3.9.0
+
+publish_to: none
+
+dev_dependencies:
+  melos: ^7.0.0
+
+workspace:
+  - tz_datetime
+  - tz_datetime/example
+  - tz_datetime_android
+  - tz_datetime_android/example
+  - tz_datetime_darwin
+  - tz_datetime_darwin/example
+  - tz_datetime_linux
+  - tz_datetime_linux/example
+  - tz_datetime_platform_interface
+  - tz_datetime_web
+  - tz_datetime_web/example
+  - tz_datetime_windows
+  - tz_datetime_windows/example
+
+melos:
+  # Don't generate intellij files
+  ide:
+    intellij: false
+
+  command:
+    # When a dependency in a package is listed it will be replaced with the following versions.
+    bootstrap:
+      environment:
+        sdk: ^3.9.0
+        flutter: ">=3.24.0"
+      dev_dependencies:
+        # Linter rules (https://pub.dev/packages/flutter_lints)
+        flutter_lints: ^6.0.0
+
+  clean:
+    hooks:
+      # Runs "flutter clean" in all Flutter packages (`--flutter`) with concurrency
+      post: melos exec --flutter -c 1 -- "flutter clean"

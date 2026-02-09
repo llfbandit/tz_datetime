@@ -1,0 +1,20 @@
+# Run with `flutter pub run ffigen --config ffigen.yaml`.
+
+name: TzDatetimeBindings
+description: Bindings for tz_datetime darwin
+
+language: objc
+output: 'lib/native/tz_datetime_bindings.dart'
+exclude-all-by-default: true
+
+objc-interfaces:
+  include:
+    - 'TzDatetimeDarwin'
+  module:
+    'TzDatetimeDarwin': 'tz_datetime_darwin_module'
+
+headers:
+  entry-points:
+    - 'src/third_party/tz_datetime_darwin_api.h'
+
+preamble: |
