@@ -1,6 +1,7 @@
 name: tz_datetime_darwin
 description: "Time zoned datetime for iOS/macOS"
 version: 1.0.0
+repository: https://github.com/llfbandit/tz_datetime
 
 resolution: workspace
 
@@ -15,6 +16,7 @@ dependencies:
   tz_datetime_platform_interface: ^1.0.0
 
   objective_c: ^9.2.3
+  ffi: ^2.1.5
 
 dev_dependencies:
   flutter_test:
