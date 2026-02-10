@@ -33,6 +33,19 @@ void main() {
       expect(dday.timeZoneName, paris);
       expect(dday.timeZoneOffset, Duration(hours: 2));
     });
+
+    test('copyWith', () {
+      final paris = 'Europe/Paris';
+
+      setLocalZone(paris);
+      final dday = TzDatetime.local(1944, DateTime.june, 6);
+      expect(dday.timeZoneOffset, Duration(hours: 2));
+
+      expect(
+        dday.copyWith(month: DateTime.january).timeZoneOffset,
+        Duration(hours: 1),
+      );
+    });
   });
 
   group('Constructors', () {

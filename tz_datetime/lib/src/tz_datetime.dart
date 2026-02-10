@@ -262,6 +262,31 @@ class TzDatetime implements DateTime {
   @override
   Duration get timeZoneOffset => _offset;
 
+  /// Creates a new [TzDatetime] from this one by updating individual properties.
+  TzDatetime copyWith({
+    String? zoneId,
+    int? year,
+    int? month,
+    int? day,
+    int? hour,
+    int? minute,
+    int? second,
+    int? millisecond,
+    int? microsecond,
+  }) {
+    return TzDatetime(
+      zoneId ?? _zoneId,
+      year ?? this.year,
+      month ?? this.month,
+      day ?? this.day,
+      hour ?? this.hour,
+      minute ?? this.minute,
+      second ?? this.second,
+      millisecond ?? this.millisecond,
+      microsecond ?? this.microsecond,
+    );
+  }
+
   /// Returns true if [other] is a [TzDatetime] at the same moment and in the
   /// same zone ID.
   ///

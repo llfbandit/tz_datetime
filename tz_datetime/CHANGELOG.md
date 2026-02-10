@@ -1,3 +1,8 @@
+## 1.0.1
+
+* fix: Add proper copyWith to adjust timezone offset.
+* fix: pubspec.yaml infos.
+
 ## 1.0.0
 
 * Initial release of tz_datetime package
