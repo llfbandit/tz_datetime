@@ -1,16 +1,19 @@
 import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
 
 import 'env.dart';
+import 'register/register.dart';
 
 class TzDatetime implements DateTime {
   /// Gets all platform available zones.
   static List<String> getAvailableTimezones() {
+    register();
     return TzDatetimePlatform.instance.getAvailableTimezones();
   }
 
   /// Gets the time zone offset for given [date],
   /// adjusted with daylight savings.
   static Duration getOffset(DateTime date, String zoneId) {
+    register();
     return TzDatetimePlatform.instance.getOffset(date, zoneId);
   }
 
