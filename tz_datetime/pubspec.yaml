@@ -1,6 +1,6 @@
 name: tz_datetime
 description: "A Flutter package for handling time zoned datetime using native platform implementations"
-version: 1.0.1
+version: 1.0.2
 repository: https://github.com/llfbandit/tz_datetime/tree/master/tz_datetime
 
 topics: 

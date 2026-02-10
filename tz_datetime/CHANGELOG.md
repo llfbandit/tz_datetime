@@ -1,3 +1,7 @@
+## 1.0.2
+
+* fix: Auto-register platform to get rid of Flutter mechanics for basic testing.
+
 ## 1.0.1
 
 * fix: Add proper copyWith to adjust timezone offset.

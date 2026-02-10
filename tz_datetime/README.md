@@ -19,21 +19,6 @@ The API is designed to be very similar to the [Timezone](https://pub.dev/package
 
 Tests are adapted from the original package to ensure reliability and compatibility.
 
-## Platform Support
-
-| Platform | Database Type                                         | Requirement
-|----------|-------------------------------------------------------|-------
-| Android  | Native                                                | SDK 1.0+
-| iOS      | Native                                                | SDK 8.0+
-| Linux    | Native (through `date` and `timedatectl`)             | system.d
-| macOS    | Native                                                | SDK 10.10+
-| Web      | Native                                                | Browser earlier than 2021 (Desktop), 2023 (Mobile)
-| Windows  | Embedded                                              |
-
-On most platforms, the package leverages native system timezone databases for accuracy and efficiency.
-
-On Windows, an embedded database approach is used to ensure consistent behavior.
-
 ## Usage
 
 Basic usage example:
@@ -58,6 +43,21 @@ void main() {
 ```
 
 For more, see the API documentation.
+
+## Platform Support
+
+| Platform | Database Type                                         | Requirement
+|----------|-------------------------------------------------------|-------
+| Android  | Native                                                | SDK 1.0+
+| iOS      | Native                                                | SDK 8.0+
+| Linux    | Native (through `date` and `timedatectl`)             | system.d
+| macOS    | Native                                                | SDK 10.10+
+| Web      | Native                                                | Browser earlier than 2021 (Desktop), 2023 (Mobile)
+| Windows  | Embedded                                              |
+
+On most platforms, the package leverages native system timezone databases for accuracy and efficiency.
+
+On Windows, an embedded database approach is used to ensure consistent behavior.
 
 ## Contributing
 

@@ -1,10 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
 import 'package:tz_datetime/tz_datetime.dart';
 
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-
   final detroit = 'America/Detroit';
   final la = 'America/Los_Angeles';
   final newYork = 'America/New_York';
