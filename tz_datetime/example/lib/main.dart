@@ -20,5 +20,7 @@ void main() {
   final nyTime = TzDatetime.from(laTime, ny);
   debugPrint(nyTime.toString()); // 2026-02-09T06:17:03.964038-0500
 
-  exit(0);
+  if (!kIsWeb) {
+    exit(0);
+  }
 }

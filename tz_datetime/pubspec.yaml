@@ -1,5 +1,5 @@
 name: tz_datetime
-description: "Time zoned datetime"
+description: "Time zoned datetime from native platform"
 version: 1.0.0
 
 topics: 
@@ -11,8 +11,8 @@ topics:
 resolution: workspace
 
 environment:
-  sdk: ^3.9.0
-  flutter: ">=3.24.0"
+  sdk: ^3.8.1
+  flutter: ">=3.32.1"
 
 dependencies:
   flutter:

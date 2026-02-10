@@ -5,7 +5,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 resolution: workspace
 
 environment:
-  sdk: ^3.9.0
+  sdk: ^3.8.1
 
 dependencies:
   flutter:

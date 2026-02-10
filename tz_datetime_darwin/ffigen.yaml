@@ -1,4 +1,4 @@
-# Run with `flutter pub run ffigen --config ffigen.yaml`.
+# Run with `dart pub run ffigen --config ffigen.yaml`.
 
 name: TzDatetimeBindings
 description: Bindings for tz_datetime darwin
@@ -22,5 +22,11 @@ objc-interfaces:
 headers:
   entry-points:
     - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSTimeZone.h"
+
+external-versions:
+  ios:
+    min: 8.0.0
+  macos:
+    min: 10.10.0
 
 preamble: |

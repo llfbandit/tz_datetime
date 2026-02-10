@@ -6,23 +6,6 @@ Platform interface for the `tz_datetime` package.
 
 This package defines the platform interface for `tz_datetime`, which provides timezone-aware datetime functionality for Flutter/Dart applications. It specifies the common API contract that all platform implementations must adhere to.
 
-## Purpose
-
-The platform interface package serves as:
-
-- An abstract contract defining the core timezone functionality
-- A bridge between the main `tz_datetime` package and platform-specific implementations
-- A way to define method channels and platform communication protocols
-- A foundation for supporting multiple platforms consistently
-
-## Architecture
-
-This package follows the Flutter federated plugin architecture:
-
-- `tz_datetime` - Main package providing the public API
-- `tz_datetime_platform_interface` - Defines the common interface
-- Platform-specific packages (`tz_datetime_android`, `tz_datetime_darwin`, etc.) - Implement the interface for each platform
-
 ## Usage
 
 This package is primarily used by:
@@ -37,4 +20,4 @@ For general usage instructions, refer to the main [`tz_datetime`](https://pub.de
 
 ## Contributing
 
-Issues and pull requests should be directed to the main [`tz_datetime`](https://github.com/your-repo/tz_datetime) repository.
+Issues and pull requests should be directed to the main [`tz_datetime`](https://github.com/llfbandit/tz_datetime) repository.

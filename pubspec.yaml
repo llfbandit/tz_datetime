@@ -1,7 +1,7 @@
 name: tz_datetime_workspace
 
 environment:
-  sdk: ^3.9.0
+  sdk: ^3.8.0
 
 publish_to: none
 
@@ -32,8 +32,8 @@ melos:
     # When a dependency in a package is listed it will be replaced with the following versions.
     bootstrap:
       environment:
-        sdk: ^3.9.0
-        flutter: ">=3.24.0"
+        sdk: ^3.8.1
+        flutter: ">=3.32.1"
       dev_dependencies:
         # Linter rules (https://pub.dev/packages/flutter_lints)
         flutter_lints: ^6.0.0
