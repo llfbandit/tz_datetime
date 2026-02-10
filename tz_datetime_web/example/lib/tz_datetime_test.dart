@@ -7,21 +7,53 @@ void main() {
   final la = 'America/Los_Angeles';
   final newYork = 'America/New_York';
 
+  group('Helpers', () {
+    test('all zones', () {
+      final zones = TzDatetime.getAvailableTimezones();
+      expect(zones, isNotEmpty);
+      expect(zones.length, greaterThan(300));
+    });
+
+    test('local', () {
+      final paris = 'Europe/Paris';
+
+      expect(local, utc);
+
+      setLocalZone(paris);
+      expect(local, paris);
+    });
+
+    test('timezone name/offset', () {
+      final paris = 'Europe/Paris';
+
+      setLocalZone(paris);
+      final dday = TzDatetime.local(1944, DateTime.june, 6);
+      expect(dday.timeZoneName, paris);
+      expect(dday.timeZoneOffset, Duration(hours: 2));
+    });
+  });
+
   group('Constructors', () {
     test('Default', () {
       final t = TzDatetime(la, 2010, 1, 2, 3, 4, 5, 6, 7);
-      expect(t.toString(), equals('2010-01-02T03:04:05.006007-0800'));
+      expect(t.toString(), equals('2010-01-02 03:04:05.006007-0800'));
     });
 
     test('Default, only year argument', () {
       final t = TzDatetime(la, 2010);
-      expect(t.toString(), equals('2010-01-01T00:00:00.000-0800'));
+      expect(t.toString(), equals('2010-01-01 00:00:00.000-0800'));
     });
 
     test('from DateTime', () {
       final utcTime = DateTime.utc(2010, 1, 2, 3, 4, 5, 6, 7);
       final t = TzDatetime.from(utcTime, newYork);
-      expect(t.toString(), equals('2010-01-01T22:04:05.006007-0500'));
+      expect(t.toString(), equals('2010-01-01 22:04:05.006007-0500'));
+    });
+
+    test('from DateTime UTC', () {
+      final utcTime = DateTime.utc(2010, 1, 2, 3, 4, 5, 6, 7);
+      final t = TzDatetime.from(utcTime, utc);
+      expect(t.toString(), equals('2010-01-02 03:04:05.006007Z'));
     });
 
     test('from local DateTime', () {
@@ -37,12 +69,12 @@ void main() {
     test('from TzDatetime', () {
       final laTime = TzDatetime(la, 2010, 1, 2, 3, 4, 5, 6, 7);
       final t = TzDatetime.from(laTime, newYork);
-      expect(t.toString(), equals('2010-01-02T06:04:05.006007-0500'));
+      expect(t.toString(), equals('2010-01-02 06:04:05.006007-0500'));
     });
 
     test('fromMilliseconds', () {
       final t = TzDatetime.fromMillisecondsSinceEpoch(newYork, 1262430245006);
-      expect(t.toString(), equals('2010-01-02T06:04:05.006-0500'));
+      expect(t.toString(), equals('2010-01-02 06:04:05.006-0500'));
     });
 
     test('fromMicroseconds', () {
@@ -50,12 +82,18 @@ void main() {
         newYork,
         1262430245006007,
       );
-      expect(t.toString(), equals('2010-01-02T06:04:05.006007-0500'));
+      expect(t.toString(), equals('2010-01-02 06:04:05.006007-0500'));
     });
 
     test('utc', () {
       final t = TzDatetime.utc(2010, 1, 2, 3, 4, 5, 6, 7);
-      expect(t.toString(), equals('2010-01-02T03:04:05.006007Z'));
+      expect(t.toString(), equals('2010-01-02 03:04:05.006007Z'));
+    });
+
+    test('local', () {
+      setLocalZone('Europe/Paris');
+      final t = TzDatetime.local(2010, 1, 2, 3, 4, 5, 6, 7);
+      expect(t.toString(), equals('2010-01-02 03:04:05.006007+0100'));
     });
   });
 
@@ -65,22 +103,22 @@ void main() {
         final u1 = DateTime.utc(1975, 1, 1, 5);
         final x1 = TzDatetime.from(u1, detroit);
 
-        test('$u1 => 1975-01-01T00:00:00.000-0500', () {
-          expect(x1.toString(), equals('1975-01-01T00:00:00.000-0500'));
+        test('$u1 => 1975-01-01 00:00:00.000-0500', () {
+          expect(x1.toString(), equals('1975-01-01 00:00:00.000-0500'));
         });
 
         final u2 = u1.subtract(const Duration(milliseconds: 1));
         final x2 = TzDatetime.from(u2, detroit);
 
-        test('$u2 => 1974-12-31T23:59:59.999-0500', () {
-          expect(x2.toString(), equals('1974-12-31T23:59:59.999-0500'));
+        test('$u2 => 1974-12-31 23:59:59.999-0500', () {
+          expect(x2.toString(), equals('1974-12-31 23:59:59.999-0500'));
         });
 
         final u3 = u1.add(const Duration(milliseconds: 1));
         final x3 = TzDatetime.from(u3, detroit);
 
-        test('$u3 => 1975-01-01T00:00:00.001-0500', () {
-          expect(x3.toString(), equals('1975-01-01T00:00:00.001-0500'));
+        test('$u3 => 1975-01-01 00:00:00.001-0500', () {
+          expect(x3.toString(), equals('1975-01-01 00:00:00.001-0500'));
         });
       });
 
@@ -88,22 +126,22 @@ void main() {
         final u1 = DateTime.utc(1945, 09, 30, 6);
         final x1 = TzDatetime.from(u1, detroit);
 
-        test('$u1 => 1945-09-30T01:00:00.000-0500', () {
-          expect(x1.toString(), '1945-09-30T01:00:00.000-0500');
+        test('$u1 => 1945-09-30 01:00:00.000-0500', () {
+          expect(x1.toString(), '1945-09-30 01:00:00.000-0500');
         });
 
         final u2 = u1.subtract(const Duration(milliseconds: 1));
         final x2 = TzDatetime.from(u2, detroit);
 
-        test('$u2 => 1945-09-30T01:59:59.999-0400', () {
-          expect(x2.toString(), equals('1945-09-30T01:59:59.999-0400'));
+        test('$u2 => 1945-09-30 01:59:59.999-0400', () {
+          expect(x2.toString(), equals('1945-09-30 01:59:59.999-0400'));
         });
 
         final u3 = u1.add(const Duration(milliseconds: 1));
         final x3 = TzDatetime.from(u3, detroit);
 
-        test('$u3 => 1945-09-30T01:00:00.001-0500', () {
-          expect(x3.toString(), equals('1945-09-30T01:00:00.001-0500'));
+        test('$u3 => 1945-09-30 01:00:00.001-0500', () {
+          expect(x3.toString(), equals('1945-09-30 01:00:00.001-0500'));
         });
       });
     });
@@ -167,64 +205,64 @@ void main() {
       group('EST/EDT transition', () {
         test('2 months before transition', () {
           final datetime = TzDatetime(detroit, 2023, 1, 12, 4);
-          expect(datetime.toString(), '2023-01-12T04:00:00.000-0500');
+          expect(datetime.toString(), '2023-01-12 04:00:00.000-0500');
         });
 
         test('1 hour before transition', () {
           final datetime = TzDatetime(detroit, 2023, 3, 12, 1);
-          expect(datetime.toString(), '2023-03-12T01:00:00.000-0500');
+          expect(datetime.toString(), '2023-03-12 01:00:00.000-0500');
         });
 
         test('lower transition', () {
           final datetime = TzDatetime(detroit, 2023, 3, 12, 2);
-          expect(datetime.toString(), '2023-03-12T03:00:00.000-0400');
+          expect(datetime.toString(), '2023-03-12 03:00:00.000-0400');
         });
 
         test('upper transition', () {
           final datetime = TzDatetime(detroit, 2023, 3, 12, 3);
-          expect(datetime.toString(), '2023-03-12T03:00:00.000-0400');
+          expect(datetime.toString(), '2023-03-12 03:00:00.000-0400');
         });
 
         test('1 hour after transition', () {
           final datetime = TzDatetime(detroit, 2023, 3, 12, 4);
-          expect(datetime.toString(), '2023-03-12T04:00:00.000-0400');
+          expect(datetime.toString(), '2023-03-12 04:00:00.000-0400');
         });
 
         test('2 months after transition', () {
           final datetime = TzDatetime(detroit, 2023, 5, 12, 4);
-          expect(datetime.toString(), '2023-05-12T04:00:00.000-0400');
+          expect(datetime.toString(), '2023-05-12 04:00:00.000-0400');
         });
       });
 
       group('EDT/EST transition', () {
         test('2 months before transition', () {
           final datetime = TzDatetime(detroit, 2023, 9, 5, 1);
-          expect(datetime.toString(), '2023-09-05T01:00:00.000-0400');
+          expect(datetime.toString(), '2023-09-05 01:00:00.000-0400');
         });
 
         test('1 hour before transition', () {
           final datetime = TzDatetime(detroit, 2023, 11, 5);
-          expect(datetime.toString(), '2023-11-05T00:00:00.000-0400');
+          expect(datetime.toString(), '2023-11-05 00:00:00.000-0400');
         });
 
         test('lower transition', () {
           final datetime = TzDatetime(detroit, 2023, 11, 5, 1);
-          expect(datetime.toString(), '2023-11-05T01:00:00.000-0400');
+          expect(datetime.toString(), '2023-11-05 01:00:00.000-0400');
         });
 
         test('upper transition', () {
           final datetime = TzDatetime(detroit, 2023, 11, 5, 2);
-          expect(datetime.toString(), '2023-11-05T02:00:00.000-0500');
+          expect(datetime.toString(), '2023-11-05 02:00:00.000-0500');
         });
 
         test('1 hour after transition', () {
           final datetime = TzDatetime(detroit, 2023, 11, 5, 3);
-          expect(datetime.toString(), '2023-11-05T03:00:00.000-0500');
+          expect(datetime.toString(), '2023-11-05 03:00:00.000-0500');
         });
 
         test('2 months after transition', () {
           final datetime = TzDatetime(detroit, 2024, 1, 5, 2);
-          expect(datetime.toString(), '2024-01-05T02:00:00.000-0500');
+          expect(datetime.toString(), '2024-01-05 02:00:00.000-0500');
         });
       });
     });
@@ -236,64 +274,64 @@ void main() {
       group('EST/EDT transition', () {
         test('2 months before transition', () {
           final datetime = TzDatetime(berlin, 2023, 1, 26, 2);
-          expect(datetime.toString(), '2023-01-26T02:00:00.000+0100');
+          expect(datetime.toString(), '2023-01-26 02:00:00.000+0100');
         });
 
         test('1 hour before transition', () {
           final datetime = TzDatetime(berlin, 2023, 3, 26, 1);
-          expect(datetime.toString(), '2023-03-26T01:00:00.000+0100');
+          expect(datetime.toString(), '2023-03-26 01:00:00.000+0100');
         });
 
         test('lower transition', () {
           final datetime = TzDatetime(berlin, 2023, 3, 26, 2);
-          expect(datetime.toString(), '2023-03-26T03:00:00.000+0200');
+          expect(datetime.toString(), '2023-03-26 03:00:00.000+0200');
         });
 
         test('upper transition', () {
           final datetime = TzDatetime(berlin, 2023, 3, 26, 3);
-          expect(datetime.toString(), '2023-03-26T03:00:00.000+0200');
+          expect(datetime.toString(), '2023-03-26 03:00:00.000+0200');
         });
 
         test('1 hour after transition', () {
           final datetime = TzDatetime(berlin, 2023, 3, 26, 4);
-          expect(datetime.toString(), '2023-03-26T04:00:00.000+0200');
+          expect(datetime.toString(), '2023-03-26 04:00:00.000+0200');
         });
 
         test('2 months after transition', () {
           final datetime = TzDatetime(berlin, 2023, 5, 26, 3);
-          expect(datetime.toString(), '2023-05-26T03:00:00.000+0200');
+          expect(datetime.toString(), '2023-05-26 03:00:00.000+0200');
         });
       });
 
       group('EDT/EST transition', () {
         test('2 months before transition', () {
           final datetime = TzDatetime(berlin, 2023, 8, 29, 2);
-          expect(datetime.toString(), '2023-08-29T02:00:00.000+0200');
+          expect(datetime.toString(), '2023-08-29 02:00:00.000+0200');
         });
 
         test('1 hour before transition', () {
           final datetime = TzDatetime(berlin, 2023, 10, 29, 1);
-          expect(datetime.toString(), '2023-10-29T01:00:00.000+0200');
+          expect(datetime.toString(), '2023-10-29 01:00:00.000+0200');
         });
 
         test('lower transition', () {
           final datetime = TzDatetime(berlin, 2023, 10, 29, 2);
-          expect(datetime.toString(), '2023-10-29T02:00:00.000+0100');
+          expect(datetime.toString(), '2023-10-29 02:00:00.000+0100');
         });
 
         test('upper transition', () {
           final datetime = TzDatetime(berlin, 2023, 10, 29, 3);
-          expect(datetime.toString(), '2023-10-29T03:00:00.000+0100');
+          expect(datetime.toString(), '2023-10-29 03:00:00.000+0100');
         });
 
         test('1 hour after transition', () {
           final datetime = TzDatetime(berlin, 2023, 10, 29, 4);
-          expect(datetime.toString(), '2023-10-29T04:00:00.000+0100');
+          expect(datetime.toString(), '2023-10-29 04:00:00.000+0100');
         });
 
         test('2 months after transition', () {
           final datetime = TzDatetime(berlin, 2024, 1, 29, 3);
-          expect(datetime.toString(), '2024-01-29T03:00:00.000+0100');
+          expect(datetime.toString(), '2024-01-29 03:00:00.000+0100');
         });
       });
     });

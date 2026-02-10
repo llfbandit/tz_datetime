@@ -2,7 +2,6 @@ import 'dart:typed_data';
 
 import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
 import 'package:tz_datetime_windows/data/data.dart';
-import 'package:tz_datetime_windows/src/location.dart';
 import 'package:tz_datetime_windows/src/location_database.dart';
 import 'package:tz_datetime_windows/src/tzdb.dart';
 
@@ -42,8 +41,6 @@ class TzDatetimeWindows extends TzDatetimePlatform {
       for (final l in tzdbDeserialize(rawData)) {
         db.add(l);
       }
-
-      db.add(Location('UTC', [minTime], [0], [TimeZone.UTC]));
     } catch (e) {
       throw TimeZoneInitException(e.toString());
     }

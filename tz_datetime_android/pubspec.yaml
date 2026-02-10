@@ -1,5 +1,5 @@
 name: tz_datetime_android
-description: "A new Flutter plugin project."
+description: "Time zoned datetime for Android"
 version: 1.0.0
 
 resolution: workspace
