@@ -1,7 +1,7 @@
 name: tz_datetime_linux
-description: "Time zoned datetime for Linux"
+description: "Time zoned datetime for tz_datetime package. Linux implementation."
 version: 1.0.0
-repository: https://github.com/llfbandit/tz_datetime
+repository: https://github.com/llfbandit/tz_datetime/tree/master/tz_datetime_linux
 
 resolution: workspace
 
