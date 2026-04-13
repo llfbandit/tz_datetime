@@ -10,8 +10,9 @@ class TzDatetimeAndroid extends TzDatetimePlatform {
 
   @override
   List<String> getAvailableTimezones() {
-    if (TzDatetime.getAvailableTimezones() case final zones?) {
+    if (TzDatetime.availableTimezones case final zones?) {
       final result = zones
+          .asDart()
           .where((z) => z != null)
           .map((z) => z!.toDartString())
           .toList();
