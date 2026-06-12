@@ -1,3 +1,7 @@
+## 1.2.1
+* fix: Remove Logging hooks dependency.
+* chore: Updates README.md.
+
 ## 1.2.0
 * feat: Remove Flutter dependencies.
 * chore: Remove jni dependency.

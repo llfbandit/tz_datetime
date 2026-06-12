@@ -1,8 +1,5 @@
-import 'dart:io' show stderr;
-
 import 'package:code_assets/code_assets.dart';
 import 'package:hooks/hooks.dart';
-import 'package:logging/logging.dart';
 import 'package:native_toolchain_c/native_toolchain_c.dart';
 
 void main(List<String> args) async {
@@ -16,15 +13,6 @@ void main(List<String> args) async {
       sources: ['src/tz_datetime.cpp'],
     );
 
-    hierarchicalLoggingEnabled = true;
-    final logger = Logger('tz_datetime_linux')
-      ..level = Level.ALL
-      ..onRecord.listen((record) => stderr.writeln(record.message));
-
-    await builder.run(
-      input: input,
-      output: output,
-      logger: logger,
-    );
+    await builder.run(input: input, output: output);
   });
 }
