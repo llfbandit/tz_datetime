@@ -1,0 +1,36 @@
+# Run with `dart run ffigen --config ffigen.yaml`.
+
+name: IcuBindings
+description: Bindings for ICU (Windows)
+
+language: c
+output:
+  bindings: 'lib/src/icu_bindings.dart'
+
+exclude-all-by-default: true
+
+functions:
+  include:
+    - ucal_open
+    - ucal_close
+    - ucal_setMillis
+    - ucal_get
+    - ucal_openTimeZones
+    - uenum_count
+    - uenum_unext
+    - uenum_close
+
+structs:
+  include:
+    - UCalendar
+    - UEnumeration
+
+typedefs:
+  include:
+    - UChar
+    - UDate
+    - UErrorCode
+
+headers:
+  entry-points:
+    - 'src/icu_minimal.h'

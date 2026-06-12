@@ -48,16 +48,14 @@ For more, see the API documentation.
 
 | Platform | Database Type                                         | Requirement
 |----------|-------------------------------------------------------|-------
-| Android  | Native                                                | SDK 1.0+
+| Android  | Native                                                | SDK 21.0+
 | iOS      | Native                                                | SDK 8.0+
 | Linux    | Native (through `date` and `timedatectl`)             | system.d
 | macOS    | Native                                                | SDK 10.10+
 | Web      | Native                                                | Browser earlier than 2021 (Desktop), 2023 (Mobile)
-| Windows  | Embedded                                              |
+| Windows  | Native                                                | Windows 10 1703+ (2017)
 
 On most platforms, the package leverages native system timezone databases for accuracy and efficiency.
-
-On Windows, an embedded database approach is used to ensure consistent behavior.
 
 ## Contributing
 

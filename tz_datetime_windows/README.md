@@ -4,7 +4,13 @@ Windows implementation of the `tz_datetime` package.
 
 ## Overview
 
-This package provides the Windows-specific implementation for the `tz_datetime` package, which offers timezone-aware datetime functionality for Flutter/Dart applications. Unlike other platforms that use native system timezone databases, Windows uses an embedded IANA database approach.
+This package provides the Windows-specific implementation for the `tz_datetime` package, which offers timezone-aware datetime functionality for Flutter/Dart applications.
+
+It uses the [ICU](https://icu.unicode.org/) library (`icu.dll`) that ships with Windows 10 version 1703 (April 2017 Creators Update).
+
+## Requirements
+
+- Windows 10 version 1703 (build 15063) or later
 
 ## Usage
 

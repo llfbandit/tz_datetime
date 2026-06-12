@@ -39,9 +39,8 @@ int32_t tz_get_offset(const char* zone_id, int64_t utc_millis) {
     pthread_mutex_lock(&tz_mutex);
 
     const char* old_tz = getenv("TZ");
-    char saved[256] = {};
     bool had_tz = (old_tz != nullptr);
-    if (had_tz) strncpy(saved, old_tz, sizeof(saved) - 1);
+    char* saved = had_tz ? strdup(old_tz) : nullptr;
 
     setenv("TZ", zone_id, 1);
     tzset();
@@ -51,8 +50,12 @@ int32_t tz_get_offset(const char* zone_id, int64_t utc_millis) {
     localtime_r(&t, &tm_info);
     const int32_t offset_ms = static_cast<int32_t>(tm_info.tm_gmtoff * 1000);
 
-    if (had_tz) setenv("TZ", saved, 1);
-    else unsetenv("TZ");
+    if (had_tz) {
+        setenv("TZ", saved, 1);
+        free(saved);
+    } else {
+        unsetenv("TZ");
+    }
     tzset();
 
     pthread_mutex_unlock(&tz_mutex);
