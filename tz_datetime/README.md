@@ -21,8 +21,6 @@ Tests are adapted from the original package to ensure reliability and compatibil
 
 ## Usage
 
-Basic usage example:
-
 ```dart
 import 'package:tz_datetime/tz_datetime.dart';
 

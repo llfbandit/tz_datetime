@@ -4,9 +4,7 @@ Linux implementation of the `tz_datetime` package.
 
 ## Overview
 
-This package provides the Linux-specific implementation for the `tz_datetime` package, which offers timezone-aware datetime functionality for Flutter/Dart applications. It leverages native Android APIs for timezone operations.
-
-Uses system utilities like `date` and `timedatectl` for timezone calculations.
+This package provides the Linux-specific implementation for the `tz_datetime` package, which offers timezone-aware datetime functionality for Flutter/Dart applications.
 
 ## Usage
 
