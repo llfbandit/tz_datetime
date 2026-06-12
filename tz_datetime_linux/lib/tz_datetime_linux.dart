@@ -2,10 +2,6 @@ import 'dart:io';
 import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
 
 class TzDatetimeLinux extends TzDatetimePlatform {
-  static void registerWith() {
-    TzDatetimePlatform.instance = TzDatetimeLinux();
-  }
-
   @override
   List<String> getAvailableTimezones() {
     final timezones = <String>[];

@@ -1,5 +1,5 @@
 name: tz_datetime
-description: "A Flutter package for handling time zoned datetime using native platform implementations"
+description: "A Dart package for handling time zoned datetime using native platform implementations"
 version: 1.0.2
 repository: https://github.com/llfbandit/tz_datetime/tree/master/tz_datetime
 
@@ -13,12 +13,8 @@ resolution: workspace
 
 environment:
   sdk: ^3.8.1
-  flutter: ">=3.32.1"
 
 dependencies:
-  flutter:
-    sdk: flutter
-  
   tz_datetime_platform_interface: ^1.0.0
   tz_datetime_android: ^1.0.0
   tz_datetime_darwin: ^1.0.0
@@ -27,26 +23,5 @@ dependencies:
   tz_datetime_windows: ^1.0.0
 
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  
-  integration_test:
-    sdk: flutter
-
-  flutter_lints: ^6.0.0
-
-flutter:
-  plugin:
-    platforms:
-      android:
-        default_package: tz_datetime_android
-      ios:
-        default_package: tz_datetime_darwin
-      macos:
-        default_package: tz_datetime_darwin
-      web:
-        default_package: tz_datetime_web
-      linux:
-        default_package: tz_datetime_linux
-      windows:
-        default_package: tz_datetime_windows
+  lints: ^6.0.0
+  test: ^1.0.0

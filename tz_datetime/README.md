@@ -1,6 +1,6 @@
 # tz_datetime
 
-A lightweight, cross-platform timezone-aware datetime package for Flutter and Dart applications.
+A lightweight, cross-platform timezone-aware datetime package for Dart and Flutter applications.
 
 This package serves as an alternative to the [Timezone](https://pub.dev/packages/timezone) package with enhanced performance characteristics and improved resource efficiency.
 

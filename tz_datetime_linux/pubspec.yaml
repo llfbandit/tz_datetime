@@ -7,25 +7,9 @@ resolution: workspace
 
 environment:
   sdk: ^3.8.1
-  flutter: ">=3.32.1"
 
 dependencies:
-  flutter:
-    sdk: flutter
-
   tz_datetime_platform_interface: ^1.0.0
 
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  integration_test:
-    sdk: flutter
-
-  flutter_lints: ^6.0.0
-
-flutter:
-  plugin:
-    platforms:
-      linux:
-        dartPluginClass: TzDatetimeLinux
-        dartFileName: 'tz_datetime_linux.dart'
+  lints: ^6.0.0

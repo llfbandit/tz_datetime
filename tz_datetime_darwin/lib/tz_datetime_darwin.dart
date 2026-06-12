@@ -4,10 +4,6 @@ import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.da
 import 'package:tz_datetime_darwin/native/tz_datetime_bindings.dart';
 
 class TzDatetimeDarwin extends TzDatetimePlatform {
-  static void registerWith() {
-    TzDatetimePlatform.instance = TzDatetimeDarwin();
-  }
-
   @override
   List<String> getAvailableTimezones() {
     final zones = NSExtendedTimeZone.getKnownTimeZoneNames();

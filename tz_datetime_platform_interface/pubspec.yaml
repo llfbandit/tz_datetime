@@ -7,15 +7,6 @@ resolution: workspace
 
 environment:
   sdk: ^3.8.1
-  flutter: ">=3.32.1"
-
-dependencies:
-  flutter:
-    sdk: flutter
-
-  plugin_platform_interface: ^2.0.2
 
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^6.0.0
+  lints: ^6.0.0

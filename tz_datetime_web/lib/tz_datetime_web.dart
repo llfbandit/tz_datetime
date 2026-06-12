@@ -1,17 +1,9 @@
 import 'dart:js_interop';
 
-import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
 import 'package:tz_datetime_web/native/intl.dart';
 
-/// A web implementation of the TzDatetimePlatform of the TzDatetime plugin.
 class TzDatetimeWeb extends TzDatetimePlatform {
-  /// Constructs a TzDatetimeWeb
-  TzDatetimeWeb();
-
-  static void registerWith(Registrar registrar) {
-    TzDatetimePlatform.instance = TzDatetimeWeb();
-  }
 
   @override
   List<String> getAvailableTimezones() {

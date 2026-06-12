@@ -33,10 +33,9 @@ melos:
     bootstrap:
       environment:
         sdk: ^3.8.1
-        flutter: ">=3.32.1"
       dev_dependencies:
-        # Linter rules (https://pub.dev/packages/flutter_lints)
-        flutter_lints: ^6.0.0
+        # Linter rules (https://pub.dev/packages/lints)
+        lints: ^6.0.0
 
   clean:
     hooks:

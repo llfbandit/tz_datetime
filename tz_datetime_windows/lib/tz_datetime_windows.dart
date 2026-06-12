@@ -6,10 +6,6 @@ import 'package:tz_datetime_windows/src/location_database.dart';
 import 'package:tz_datetime_windows/src/tzdb.dart';
 
 class TzDatetimeWindows extends TzDatetimePlatform {
-  static void registerWith() {
-    TzDatetimePlatform.instance = TzDatetimeWindows();
-  }
-
   LocationDatabase? _db;
 
   @override
