@@ -1,3 +1,6 @@
+## 1.1.0
+* feat: Remove Flutter dependencies.
+
 ## 1.0.2
 
 * fix: Auto-register platform to get rid of Flutter mechanics for basic testing.

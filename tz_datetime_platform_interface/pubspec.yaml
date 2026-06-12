@@ -1,6 +1,6 @@
 name: tz_datetime_platform_interface
 description: A common interface for the tz_datetime package to call dedicated platform methods.
-version: 1.0.0
+version: 1.1.0
 repository: https://github.com/llfbandit/tz_datetime
 
 resolution: workspace

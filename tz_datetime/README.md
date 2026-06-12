@@ -11,7 +11,7 @@ This package serves as an alternative to the [Timezone](https://pub.dev/packages
 - **Fast Startup**: Nothing to load before working with dates & timezones, improving app launch times
 - **Native Integration**: Provides seamless calls to dedicated platform APIs
 - **Complete Data**: No compromise on truncated databases - full timezone information available
-- **Minimal Dependencies**: No heavy dependencies, only lightweight bindings to platform-specific implementations
+- **Minimal Dependencies**: Only lightweight bindings to platform-specific implementations
 
 ## API Compatibility
 
@@ -55,7 +55,7 @@ For more, see the API documentation.
 | Web      | Native                                                | Browser earlier than 2021 (Desktop), 2023 (Mobile)
 | Windows  | Native                                                | Windows 10 1703+ (2017)
 
-On most platforms, the package leverages native system timezone databases for accuracy and efficiency.
+On all platforms, the package leverages native system timezone databases for accuracy and efficiency.
 
 ## Contributing
 
