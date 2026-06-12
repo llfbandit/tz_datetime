@@ -1,4 +1,4 @@
-# Run with `dart pub run ffigen --config ffigen.yaml`.
+# Run with `dart run ffigen --config ffigen.yaml`.
 
 name: TzDatetimeBindings
 description: Bindings for tz_datetime darwin

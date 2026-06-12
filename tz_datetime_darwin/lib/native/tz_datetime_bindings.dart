@@ -45,9 +45,9 @@ final _objc_msgSend_1r6ymhb = objc.msgSendPointer
         ffi.Pointer<objc.ObjCObjectImpl>,
       )
     >();
-typedef instancetype = ffi.Pointer<objc.ObjCObjectImpl>;
-typedef Dartinstancetype = objc.ObjCObject;
-late final _sel_timeZoneWithName_ = objc.registerName("timeZoneWithName:");
+late final _sel_nextDaylightSavingTimeTransitionAfterDate_ = objc.registerName(
+  "nextDaylightSavingTimeTransitionAfterDate:",
+);
 final _objc_msgSend_1sotr3r = objc.msgSendPointer
     .cast<
       ffi.NativeFunction<
@@ -65,6 +65,9 @@ final _objc_msgSend_1sotr3r = objc.msgSendPointer
         ffi.Pointer<objc.ObjCObjectImpl>,
       )
     >();
+typedef instancetype = ffi.Pointer<objc.ObjCObjectImpl>;
+typedef Dartinstancetype = objc.ObjCObject;
+late final _sel_timeZoneWithName_ = objc.registerName("timeZoneWithName:");
 late final _sel_systemTimeZone = objc.registerName("systemTimeZone");
 final _objc_msgSend_151sglz = objc.msgSendPointer
     .cast<
@@ -463,6 +466,23 @@ extension type NSTimeZone._(objc.ObjCObject object$)
 }
 
 extension NSTimeZone$Methods on NSTimeZone {
+  /// nextDaylightSavingTimeTransitionAfterDate:
+  objc.NSDate? nextDaylightSavingTimeTransitionAfterDate(objc.NSDate aDate) {
+    objc.checkOsVersionInternal(
+      'NSTimeZone.nextDaylightSavingTimeTransitionAfterDate:',
+      iOS: (false, (2, 0, 0)),
+      macOS: (false, (10, 5, 0)),
+    );
+    final $ret = _objc_msgSend_1sotr3r(
+      object$.ref.pointer,
+      _sel_nextDaylightSavingTimeTransitionAfterDate_,
+      aDate.ref.pointer,
+    );
+    return $ret.address == 0
+        ? null
+        : objc.NSDate.fromPointer($ret, retain: true, release: true);
+  }
+
   /// secondsFromGMTForDate:
   int secondsFromGMTForDate(objc.NSDate aDate) {
     return _objc_msgSend_1r6ymhb(
