@@ -10,4 +10,9 @@ class TzDatetimeWindows extends TzDatetimePlatform {
   Duration getOffset(DateTime date, String zoneId) {
     return icu.getOffset(zoneId, date.millisecondsSinceEpoch);
   }
+
+  @override
+  int localToUtcMicros(int localAsUtcMs, String zoneId, int us) {
+    return icu.localToUtcMicros(zoneId, localAsUtcMs, us);
+  }
 }

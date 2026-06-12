@@ -1,60 +1,57 @@
 import 'dart:io';
+
 import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
+
+import 'native/tz_datetime_ffi.dart' as ffi;
+
+const _zoneInfoRoot = '/usr/share/zoneinfo';
+
+// Subdirectories that duplicate the main zone set and should be excluded.
+const _skipTopDirs = {'posix', 'right'};
+
+// Non-timezone files present in the zoneinfo directory.
+const _skipFiles = {
+  '+VERSION',
+  'iso3166.tab',
+  'leap-seconds.list',
+  'leapseconds',
+  'localtime',
+  'posixrules',
+  'tzdata.zi',
+  'stzdata.zi',
+  'zone.tab',
+  'zone1970.tab',
+  'zonenow.tab',
+};
 
 class TzDatetimeLinux extends TzDatetimePlatform {
   @override
   List<String> getAvailableTimezones() {
-    final result = Process.runSync('timedatectl', ['list-timezones']);
-
-    if (result.exitCode != 0) {
-      throw TimeZoneInitException(
-        'timedatectl exited with code ${result.exitCode}',
-      );
+    final dir = Directory(_zoneInfoRoot);
+    if (!dir.existsSync()) {
+      throw TimeZoneInitException('tzdata not found at $_zoneInfoRoot');
     }
 
-    return result.stdout
-        .toString()
-        .split('\n')
-        .map((l) => l.trim())
-        .where((l) => l.isNotEmpty)
-        .toList()
-      ..sort();
+    final result = <String>[];
+    for (final entity in dir.listSync(recursive: true, followLinks: false)) {
+      if (entity is! File) continue;
+      final rel = entity.path.substring(_zoneInfoRoot.length + 1);
+      final top = rel.contains('/') ? rel.substring(0, rel.indexOf('/')) : rel;
+      if (_skipTopDirs.contains(top) || _skipFiles.contains(rel)) continue;
+      result.add(rel);
+    }
+    return result..sort();
   }
 
   @override
   Duration getOffset(DateTime date, String zoneId) {
-    final utc = date.toUtc();
-    final utcDateString =
-        '${utc.year}-'
-        '${utc.month.toString().padLeft(2, '0')}-'
-        '${utc.day.toString().padLeft(2, '0')} '
-        '${utc.hour.toString().padLeft(2, '0')}:'
-        '${utc.minute.toString().padLeft(2, '0')}:'
-        '${utc.second.toString().padLeft(2, '0')} +00';
-
-    final result = Process.runSync(
-      'date',
-      ['--date=$utcDateString', '+%z'],
-      environment: {...Platform.environment, 'TZ': zoneId},
+    return Duration(
+      milliseconds: ffi.getOffsetMs(zoneId, date.millisecondsSinceEpoch),
     );
-
-    if (result.exitCode != 0) {
-      throw LocationNotFoundException(zoneId);
-    }
-
-    return _parseOffset(result.stdout.toString().trim());
   }
 
-  // Parses +%z output from `date` (format: +HHMM or -HHMM)
-  Duration _parseOffset(String offsetStr) {
-    if (offsetStr.length < 5) return Duration.zero;
-
-    final isNegative = offsetStr.startsWith('-');
-    final clean = offsetStr.substring(1);
-    final hours = int.tryParse(clean.substring(0, 2)) ?? 0;
-    final minutes = int.tryParse(clean.substring(2, 4)) ?? 0;
-    final duration = Duration(hours: hours, minutes: minutes);
-
-    return isNegative ? -duration : duration;
+  @override
+  int localToUtcMicros(int localAsUtcMs, String zoneId, int us) {
+    return ffi.localToUtcMicros(localAsUtcMs, zoneId, us);
   }
 }

@@ -18,6 +18,7 @@ objc-interfaces:
         - "timeZoneWithName:"
         - "knownTimeZoneNames"
         - "secondsFromGMTForDate:"
+        - "nextDaylightSavingTimeTransitionAfterDate:"
 
 headers:
   entry-points:

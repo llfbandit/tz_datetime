@@ -11,9 +11,86 @@ const _ucalDefault = 0;
 const _fieldZoneOffset = 15;
 const _fieldDstOffset = 16;
 
+// UTimeZoneTransitionType
+const _tzTransitionNext = 0;
+
 final _bindings = IcuBindings(DynamicLibrary.open('icu.dll'));
 
 // --- Public API --------------------------------------------------------------
+
+int localToUtcMicros(String zoneId, int localAsUtcMs, int us) {
+  return using((arena) {
+    final status = arena<UErrorCode>()..value = 0;
+    final zonePtr = _toUChar(zoneId, arena);
+
+    final cal = _bindings.ucal_open(
+      zonePtr,
+      zoneId.length,
+      nullptr,
+      _ucalDefault,
+      status,
+    );
+    _checkStatus(status.value, 'ucal_open');
+
+    try {
+      // Gets total offset (zone + DST) in ms for the calendar at the given UTC time.
+      // Reuses the open calendar to avoid repeated ucal_open/close overhead.
+      int offsetAt(double ms) {
+        status.value = 0;
+        _bindings.ucal_setMillis(cal, ms, status);
+        _checkStatus(status.value, 'ucal_setMillis');
+
+        status.value = 0;
+        final raw = _bindings.ucal_get(cal, _fieldZoneOffset, status);
+        _checkStatus(status.value, 'ucal_get(ZONE_OFFSET)');
+
+        status.value = 0;
+        final dst = _bindings.ucal_get(cal, _fieldDstOffset, status);
+        _checkStatus(status.value, 'ucal_get(DST_OFFSET)');
+
+        return raw + dst;
+      }
+
+      final localOffset = offsetAt(localAsUtcMs.toDouble());
+      final adjustedInstant = localAsUtcMs - localOffset;
+      final adjOffset = offsetAt(adjustedInstant.toDouble());
+      var resultMs = localAsUtcMs - adjOffset;
+
+      if (localOffset != adjOffset) {
+        if (adjOffset != offsetAt(resultMs.toDouble())) {
+          // Spring-forward gap: ask ICU for the exact transition UTC instant.
+          // This replaces the binary search with a single ucal_getTimeZoneTransitionDate call.
+          final postGapOffset = localOffset > adjOffset
+              ? localOffset
+              : adjOffset;
+          final loMs = adjOffset == postGapOffset ? resultMs : adjustedInstant;
+
+          status.value = 0;
+          _bindings.ucal_setMillis(cal, loMs.toDouble(), status);
+          _checkStatus(status.value, 'ucal_setMillis');
+
+          final transitionPtr = arena<Double>();
+          status.value = 0;
+          final found = _bindings.ucal_getTimeZoneTransitionDate(
+            cal,
+            _tzTransitionNext,
+            transitionPtr,
+            status,
+          );
+          _checkStatus(status.value, 'ucal_getTimeZoneTransitionDate');
+
+          if (found != 0) {
+            resultMs = transitionPtr.value.round();
+          }
+        }
+      }
+
+      return resultMs * 1000 + us;
+    } finally {
+      _bindings.ucal_close(cal);
+    }
+  });
+}
 
 Duration getOffset(String zoneId, int millisSinceEpoch) {
   return using((arena) {

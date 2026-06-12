@@ -25,4 +25,51 @@ class TzDatetimeDarwin extends TzDatetimePlatform {
 
     return Duration(seconds: nsZone.secondsFromGMTForDate(date.toNSDate()));
   }
+
+  @override
+  int localToUtcMicros(int localAsUtcMs, String zoneId, int us) {
+    final nsZone = NSTimeZone.timeZoneWithName(zoneId.toNSString());
+    if (nsZone == null) throw LocationNotFoundException(zoneId);
+
+    // Calls secondsFromGMTForDate: directly on the cached nsZone, avoiding
+    // repeated NSTimeZone.timeZoneWithName: lookups the Dart fallback would make.
+    int offsetMs(int ms) {
+      return nsZone.secondsFromGMTForDate(
+            DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true).toNSDate(),
+          ) *
+          1000;
+    }
+
+    final localOffset = offsetMs(localAsUtcMs);
+    final adjustedInstant = localAsUtcMs - localOffset;
+    final adjOffset = offsetMs(adjustedInstant);
+    var resultMs = localAsUtcMs - adjOffset;
+
+    if (localOffset != adjOffset) {
+      if (adjOffset != offsetMs(resultMs)) {
+        // Spring-forward gap: binary-search for the first post-gap instant.
+        final postGapOffset =
+            localOffset > adjOffset ? localOffset : adjOffset;
+        int lo, hi;
+        if (adjOffset == postGapOffset) {
+          lo = resultMs;
+          hi = adjustedInstant;
+        } else {
+          lo = adjustedInstant;
+          hi = resultMs;
+        }
+        while (hi - lo > 1000) {
+          final mid = lo + (hi - lo) ~/ 2;
+          if (offsetMs(mid) == postGapOffset) {
+            hi = mid;
+          } else {
+            lo = mid;
+          }
+        }
+        resultMs = hi;
+      }
+    }
+
+    return Duration(milliseconds: resultMs, microseconds: us).inMicroseconds;
+  }
 }

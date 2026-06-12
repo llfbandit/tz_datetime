@@ -1,4 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
+import 'package:test/test.dart';
 import 'package:tz_datetime/tz_datetime.dart';
 
 void main() {
@@ -134,10 +134,7 @@ void main() {
       final t = TzDatetime.now(newYork);
       final after = DateTime.now().millisecondsSinceEpoch;
       expect(t.timeZoneName, equals(newYork));
-      expect(
-        t.millisecondsSinceEpoch,
-        inInclusiveRange(before, after),
-      );
+      expect(t.millisecondsSinceEpoch, inInclusiveRange(before, after));
     });
 
     test('parse UTC string uses from()', () {
@@ -190,9 +187,15 @@ void main() {
 
   group('Comparison', () {
     // la midnight = UTC 08:00; ny 03:00 = UTC 08:00 — same UTC instant
-    final earlier = TzDatetime(la, 2010, 1, 1, 0);  // UTC 2010-01-01 08:00
-    final later = TzDatetime(la, 2010, 1, 2, 0);    // UTC 2010-01-02 08:00
-    final sameUtcInNy = TzDatetime(newYork, 2010, 1, 1, 3); // UTC 2010-01-01 08:00
+    final earlier = TzDatetime(la, 2010, 1, 1, 0); // UTC 2010-01-01 08:00
+    final later = TzDatetime(la, 2010, 1, 2, 0); // UTC 2010-01-02 08:00
+    final sameUtcInNy = TzDatetime(
+      newYork,
+      2010,
+      1,
+      1,
+      3,
+    ); // UTC 2010-01-01 08:00
 
     test('isBefore', () {
       expect(earlier.isBefore(later), isTrue);
@@ -253,9 +256,15 @@ void main() {
   group('Equality', () {
     // la 03:00 = UTC 11:00; ny 06:00 = UTC 11:00 — same UTC instant
     final t1 = TzDatetime(la, 2010, 1, 2, 3);
-    final t2 = TzDatetime(la, 2010, 1, 2, 3);          // same moment, same zone
-    final t3 = TzDatetime(newYork, 2010, 1, 2, 6);     // same UTC moment, different zone
-    final t4 = TzDatetime(la, 2010, 1, 3, 3);          // different moment
+    final t2 = TzDatetime(la, 2010, 1, 2, 3); // same moment, same zone
+    final t3 = TzDatetime(
+      newYork,
+      2010,
+      1,
+      2,
+      6,
+    ); // same UTC moment, different zone
+    final t4 = TzDatetime(la, 2010, 1, 3, 3); // different moment
 
     test('TzDatetime == itself (identical)', () {
       expect(t1 == t1, isTrue);

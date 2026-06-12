@@ -109,6 +109,37 @@ class IcuBindings {
         int Function(ffi.Pointer<UCalendar>, int, ffi.Pointer<UErrorCode>)
       >();
 
+  int ucal_getTimeZoneTransitionDate(
+    ffi.Pointer<UCalendar> cal,
+    int type,
+    ffi.Pointer<UDate> transition,
+    ffi.Pointer<UErrorCode> status,
+  ) {
+    return _ucal_getTimeZoneTransitionDate(cal, type, transition, status);
+  }
+
+  late final _ucal_getTimeZoneTransitionDatePtr =
+      _lookup<
+        ffi.NativeFunction<
+          UBool Function(
+            ffi.Pointer<UCalendar>,
+            ffi.Int32,
+            ffi.Pointer<UDate>,
+            ffi.Pointer<UErrorCode>,
+          )
+        >
+      >('ucal_getTimeZoneTransitionDate');
+  late final _ucal_getTimeZoneTransitionDate =
+      _ucal_getTimeZoneTransitionDatePtr
+          .asFunction<
+            int Function(
+              ffi.Pointer<UCalendar>,
+              int,
+              ffi.Pointer<UDate>,
+              ffi.Pointer<UErrorCode>,
+            )
+          >();
+
   ffi.Pointer<UEnumeration> ucal_openTimeZones(ffi.Pointer<UErrorCode> ec) {
     return _ucal_openTimeZones(ec);
   }
@@ -185,6 +216,8 @@ typedef UChar = ffi.Uint16;
 typedef DartUChar = int;
 typedef UDate = ffi.Double;
 typedef DartUDate = double;
+typedef UBool = ffi.Int8;
+typedef DartUBool = int;
 typedef UErrorCode = ffi.Int32;
 typedef DartUErrorCode = int;
 

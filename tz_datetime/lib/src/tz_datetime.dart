@@ -26,7 +26,23 @@ class TzDatetime implements DateTime {
   ///
   /// The result is always in the time zone of the provided [zoneId].
   static TzDatetime parse(String isoDate, String zoneId) {
-    return TzDatetime.from(DateTime.parse(isoDate), zoneId);
+    final dt = DateTime.parse(isoDate);
+
+    if (dt.isUtc) {
+      return TzDatetime.from(dt, zoneId);
+    }
+
+    return TzDatetime(
+      zoneId,
+      dt.year,
+      dt.month,
+      dt.day,
+      dt.hour,
+      dt.minute,
+      dt.second,
+      dt.millisecond,
+      dt.microsecond,
+    );
   }
 
   /// Constructs a [TzDatetime] instance specified at [zoneId].
@@ -212,8 +228,7 @@ class TzDatetime implements DateTime {
   ///
   /// Returns `this` if it is already in the local time zone.
   @override
-  TzDatetime toLocal() =>
-      isLocal ? this : TzDatetime.from(_utcDatetime, _zoneId);
+  TzDatetime toLocal() => isLocal ? this : TzDatetime.from(_utcDatetime, local);
 
   /// Returns this DateTime value in the UTC time zone.
   ///
@@ -255,9 +270,9 @@ class TzDatetime implements DateTime {
   int get year => _localDatetime.year;
 
   @override
-  bool get isUtc => identical(_zoneId, utc);
+  bool get isUtc => _zoneId == utc;
 
-  bool get isLocal => identical(_zoneId, local);
+  bool get isLocal => _zoneId == local;
 
   @override
   String get timeZoneName => _zoneId;
@@ -293,15 +308,28 @@ class TzDatetime implements DateTime {
   /// Returns true if [other] is a [TzDatetime] at the same moment and in the
   /// same zone ID.
   ///
+  /// When compared to a plain [DateTime], uses the same semantics as
+  /// [DateTime.==].
+  ///
   /// See [isAtSameMomentAs] for a comparison that adjusts for time zone.
   @override
   bool operator ==(Object other) {
-    return identical(this, other) ||
-        other is TzDatetime &&
-            _utcDatetime.isAtSameMomentAs(other._utcDatetime) &&
-            _zoneId == other._zoneId;
+    if (identical(this, other)) return true;
+    if (other is TzDatetime) {
+      return _utcDatetime.isAtSameMomentAs(other._utcDatetime) &&
+          _zoneId == other._zoneId;
+    }
+    if (other is DateTime) {
+      return millisecondsSinceEpoch == other.millisecondsSinceEpoch &&
+          isUtc == other.isUtc;
+    }
+    return false;
   }
 
+  /// hashCode is derived from the UTC instant only, not the zone.
+  /// Including _zoneId would violate the hash contract when comparing with
+  /// a plain DateTime (which hashes by instant), so the collision trade-off
+  /// is unavoidable while TzDatetime implements DateTime.
   @override
   int get hashCode => _utcDatetime.hashCode;
 
@@ -356,44 +384,14 @@ class TzDatetime implements DateTime {
 
   /// Converts a [_localDateTime] into a correct [DateTime].
   static DateTime _utcFromLocalDateTime(DateTime local, String zoneId) {
-    int getOffsetMillis(int millisSinceEpoch) {
-      return getOffset(
-        DateTime.fromMillisecondsSinceEpoch(millisSinceEpoch, isUtc: true),
-        zoneId,
-      ).inMilliseconds;
-    }
+    register();
 
-    // Get the offset at local (first estimate).
-    final localInstant = local.millisecondsSinceEpoch;
-    final localOffset = getOffsetMillis(local.millisecondsSinceEpoch);
-
-    // Adjust localInstant using the estimate and recalculate the offset.
-    final adjustedInstant = localInstant - localOffset;
-    final adjustedOffset = getOffsetMillis(adjustedInstant);
-
-    var milliseconds = localInstant - adjustedOffset;
-
-    // If the offsets differ, we must be near a DST boundary
-    if (localOffset != adjustedOffset) {
-      // We need to ensure that time is always after the DST gap
-      // this happens naturally for positive offsets, but not for negative.
-      // If we just use adjustedOffset then the time is pushed back before the
-      // transition, whereas it should be on or after the transition
-      if (localOffset - adjustedOffset < 0 &&
-          adjustedOffset != getOffsetMillis(localInstant - adjustedOffset)) {
-        milliseconds = adjustedInstant;
-      }
-    }
-
-    // Ensure original microseconds are preserved regardless of TZ shift.
-    final microsecondsSinceEpoch = Duration(
-      milliseconds: milliseconds,
-      microseconds: local.microsecond,
-    ).inMicroseconds;
-
-    return DateTime.fromMicrosecondsSinceEpoch(
-      microsecondsSinceEpoch,
-      isUtc: true,
+    final us = TzDatetimePlatform.instance.localToUtcMicros(
+      local.millisecondsSinceEpoch,
+      zoneId,
+      local.microsecond,
     );
+
+    return DateTime.fromMicrosecondsSinceEpoch(us, isUtc: true);
   }
 }

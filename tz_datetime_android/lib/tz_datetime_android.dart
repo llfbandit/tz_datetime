@@ -12,4 +12,9 @@ class TzDatetimeAndroid extends TzDatetimePlatform {
       milliseconds: ffi.getOffsetMs(zoneId, date.millisecondsSinceEpoch),
     );
   }
+
+  @override
+  int localToUtcMicros(int localAsUtcMs, String zoneId, int us) {
+    return ffi.localToUtcMicros(localAsUtcMs, zoneId, us);
+  }
 }

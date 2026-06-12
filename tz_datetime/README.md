@@ -50,9 +50,9 @@ For more, see the API documentation.
 |----------|-------------------------------------------------------|-------
 | Android  | Native                                                | SDK 21.0+
 | iOS      | Native                                                | SDK 8.0+
-| Linux    | Native (through `date` and `timedatectl`)             | system.d
+| Linux    | Native                                                | '/usr/share/zoneinfo' DB location.
 | macOS    | Native                                                | SDK 10.10+
-| Web      | Native                                                | Browser earlier than 2021 (Desktop), 2023 (Mobile)
+| Web      | Native                                                | Browser 2021 (Desktop), 2023 (Mobile)
 | Windows  | Native                                                | Windows 10 1703+ (2017)
 
 On all platforms, the package leverages native system timezone databases for accuracy and efficiency.
