@@ -1,3 +1,10 @@
+## 1.1.0
+
+* feat: Remove Flutter dependencies.
+* fix: Parsing.
+* fix: spring-forward gap.
+* chore: Reaches 100% coverage.
+
 ## 1.0.2
 
 * fix: Auto-register platform to get rid of Flutter mechanics for basic testing.

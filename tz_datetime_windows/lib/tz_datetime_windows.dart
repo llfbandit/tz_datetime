@@ -1,50 +1,18 @@
-import 'dart:typed_data';
-
 import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
-import 'package:tz_datetime_windows/data/data.dart';
-import 'package:tz_datetime_windows/src/location_database.dart';
-import 'package:tz_datetime_windows/src/tzdb.dart';
+
+import 'src/icu.dart' as icu;
 
 class TzDatetimeWindows extends TzDatetimePlatform {
-  static void registerWith() {
-    TzDatetimePlatform.instance = TzDatetimeWindows();
-  }
-
-  LocationDatabase? _db;
-
   @override
-  List<String> getAvailableTimezones() {
-    _initializeDatabase();
-
-    return _db!.locations.keys.toList(growable: false);
-  }
+  List<String> getAvailableTimezones() => icu.getAvailableTimezones();
 
   @override
   Duration getOffset(DateTime date, String zoneId) {
-    _initializeDatabase();
-
-    final location = _db!.get(zoneId);
-    final timeZone = location.timeZone(date.millisecondsSinceEpoch);
-
-    return timeZone.offset;
+    return icu.getOffset(zoneId, date.millisecondsSinceEpoch);
   }
 
-  /// Initialize Time zone database.
-  void _initializeDatabase() {
-    if (_db != null) return;
-
-    final db = LocationDatabase();
-
-    try {
-      final rawData = Uint8List.fromList(embeddedData.codeUnits);
-
-      for (final l in tzdbDeserialize(rawData)) {
-        db.add(l);
-      }
-    } catch (e) {
-      throw TimeZoneInitException(e.toString());
-    }
-
-    _db = db;
+  @override
+  int localToUtcMicros(int localAsUtcMs, String zoneId, int us) {
+    return icu.localToUtcMicros(zoneId, localAsUtcMs, us);
   }
 }

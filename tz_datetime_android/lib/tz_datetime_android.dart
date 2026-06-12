@@ -1,37 +1,20 @@
-import 'package:jni/jni.dart';
 import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
 
-import 'native/tz_datetime_bindings.dart';
+import 'native/tz_datetime_ffi.dart' as ffi;
 
 class TzDatetimeAndroid extends TzDatetimePlatform {
-  static void registerWith() {
-    TzDatetimePlatform.instance = TzDatetimeAndroid();
-  }
-
   @override
-  List<String> getAvailableTimezones() {
-    if (TzDatetime.availableTimezones case final zones?) {
-      final result = zones
-          .asDart()
-          .where((z) => z != null)
-          .map((z) => z!.toDartString())
-          .toList();
-
-      zones.release();
-
-      return result;
-    }
-
-    return <String>[];
-  }
+  List<String> getAvailableTimezones() => ffi.getTimezones();
 
   @override
   Duration getOffset(DateTime date, String zoneId) {
     return Duration(
-      milliseconds: TzDatetime.getOffset(
-        zoneId.toJString(),
-        date.millisecondsSinceEpoch,
-      ),
+      milliseconds: ffi.getOffsetMs(zoneId, date.millisecondsSinceEpoch),
     );
+  }
+
+  @override
+  int localToUtcMicros(int localAsUtcMs, String zoneId, int us) {
+    return ffi.localToUtcMicros(localAsUtcMs, zoneId, us);
   }
 }

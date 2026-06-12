@@ -1,6 +1,6 @@
 # tz_datetime
 
-A lightweight, cross-platform timezone-aware datetime package for Flutter and Dart applications.
+A lightweight, cross-platform timezone-aware datetime package for Dart and Flutter applications.
 
 This package serves as an alternative to the [Timezone](https://pub.dev/packages/timezone) package with enhanced performance characteristics and improved resource efficiency.
 
@@ -11,7 +11,7 @@ This package serves as an alternative to the [Timezone](https://pub.dev/packages
 - **Fast Startup**: Nothing to load before working with dates & timezones, improving app launch times
 - **Native Integration**: Provides seamless calls to dedicated platform APIs
 - **Complete Data**: No compromise on truncated databases - full timezone information available
-- **Minimal Dependencies**: No heavy dependencies, only lightweight bindings to platform-specific implementations
+- **Minimal Dependencies**: Only lightweight bindings to platform-specific implementations
 
 ## API Compatibility
 
@@ -48,16 +48,14 @@ For more, see the API documentation.
 
 | Platform | Database Type                                         | Requirement
 |----------|-------------------------------------------------------|-------
-| Android  | Native                                                | SDK 1.0+
+| Android  | Native                                                | SDK 21.0+
 | iOS      | Native                                                | SDK 8.0+
-| Linux    | Native (through `date` and `timedatectl`)             | system.d
+| Linux    | Native                                                | '/usr/share/zoneinfo' DB location.
 | macOS    | Native                                                | SDK 10.10+
-| Web      | Native                                                | Browser earlier than 2021 (Desktop), 2023 (Mobile)
-| Windows  | Embedded                                              |
+| Web      | Native                                                | Browser 2021 (Desktop), 2023 (Mobile)
+| Windows  | Native                                                | Windows 10 1703+ (2017)
 
-On most platforms, the package leverages native system timezone databases for accuracy and efficiency.
-
-On Windows, an embedded database approach is used to ensure consistent behavior.
+On all platforms, the package leverages native system timezone databases for accuracy and efficiency.
 
 ## Contributing
 
