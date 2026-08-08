@@ -1,3 +1,6 @@
+## 1.2.2
+* fix: Snap spring-forward gap to exact transition.
+
 ## 1.2.1
 * fix: Remove Logging hooks dependency.
 * chore: Updates README.md.

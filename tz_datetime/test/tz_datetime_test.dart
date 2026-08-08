@@ -643,6 +643,11 @@ void main() {
           expect(datetime.toString(), '2023-10-01 02:30:00.000+1100');
         });
 
+        test('unaligned time in gap snaps to post-gap instant', () {
+          final datetime = TzDatetime(lordHowe, 2023, 10, 1, 2, 17, 13, 123);
+          expect(datetime.toString(), '2023-10-01 02:30:00.000+1100');
+        });
+
         test('post-gap instant', () {
           final datetime = TzDatetime(lordHowe, 2023, 10, 1, 2, 30);
           expect(datetime.toString(), '2023-10-01 02:30:00.000+1100');

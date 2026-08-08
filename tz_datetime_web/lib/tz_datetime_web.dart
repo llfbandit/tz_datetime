@@ -62,7 +62,7 @@ class TzDatetimeWeb extends TzDatetimePlatform {
           lo = adjustedInstant;
           hi = resultMs;
         }
-        while (hi - lo > 1000) {
+        while (hi - lo > 1) {
           final mid = lo + (hi - lo) ~/ 2;
           if (offsetMs(mid) == postGapOffset) {
             hi = mid;

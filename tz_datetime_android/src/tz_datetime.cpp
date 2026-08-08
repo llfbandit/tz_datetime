@@ -177,7 +177,7 @@ int64_t tz_local_to_utc_micros(const char* zone_id, int64_t local_as_utc_ms, int
             } else {
                 lo = adjusted;  hi = result_ms;
             }
-            while (hi - lo > 1000) {
+            while (hi - lo > 1) {
                 const int64_t mid = lo + (hi - lo) / 2;
                 if (gmtoff_ms_unsafe(mid) == post_gap) {
                     hi = mid;
