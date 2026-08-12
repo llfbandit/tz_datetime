@@ -38,6 +38,17 @@ void main() {
       expect(winterNy, equals(const Duration(hours: -5)));
     });
 
+    test('unknown zone', () {
+      final unknown = 'Europe/Pariss';
+      final throwsNotFound = throwsA(isA<LocationNotFoundException>());
+
+      expect(
+        () => TzDatetime.getOffset(DateTime.utc(2023), unknown),
+        throwsNotFound,
+      );
+      expect(() => TzDatetime(unknown, 2023), throwsNotFound);
+    });
+
     test('copyWith', () {
       final paris = 'Europe/Paris';
 

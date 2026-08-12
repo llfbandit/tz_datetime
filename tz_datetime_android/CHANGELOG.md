@@ -1,5 +1,6 @@
 ## 1.2.2
 * fix: Snap spring-forward gap to exact transition.
+* fix: Throw LocationNotFoundException for unknown zones.
 
 ## 1.2.1
 * fix: Remove Logging hooks dependency.

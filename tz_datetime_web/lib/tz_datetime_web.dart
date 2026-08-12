@@ -78,17 +78,24 @@ class TzDatetimeWeb extends TzDatetimePlatform {
   }
 }
 
-DateTimeFormat _makeFormatter(String zoneId) => DateTimeFormat(
-  'en-US'.toJS,
-  {
-        'timeZone'.toJS: zoneId.toJS,
-        'timeZoneName'.toJS: 'longOffset'.toJS,
-        'hour'.toJS: '2-digit'.toJS,
-        'minute'.toJS: '2-digit'.toJS,
-        'hour12'.toJS: false.toJS,
-      }.jsify()!
-      as JSObject,
-);
+DateTimeFormat _makeFormatter(String zoneId) {
+  try {
+    return DateTimeFormat(
+      'en-US'.toJS,
+      {
+            'timeZone'.toJS: zoneId.toJS,
+            'timeZoneName'.toJS: 'longOffset'.toJS,
+            'hour'.toJS: '2-digit'.toJS,
+            'minute'.toJS: '2-digit'.toJS,
+            'hour12'.toJS: false.toJS,
+          }.jsify()!
+          as JSObject,
+    );
+  } catch (_) {
+    // Intl throws a RangeError for unknown zones.
+    throw LocationNotFoundException(zoneId);
+  }
+}
 
 // Parses a longOffset timeZoneName value ("GMT+HH:MM", "GMT-HH:MM", "GMT", "UTC")
 // into milliseconds.

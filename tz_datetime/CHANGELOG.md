@@ -1,3 +1,8 @@
+## 1.2.0
+
+* feat: Export LocationNotFoundException and TimeZoneInitException.
+* fix: Throw LocationNotFoundException for unknown zones on all platforms.
+
 ## 1.1.0
 
 * feat: Remove Flutter dependencies.

@@ -25,6 +25,8 @@ const _skipFiles = {
 };
 
 class TzDatetimeLinux extends TzDatetimePlatform {
+  final _zones = <String>{};
+
   @override
   List<String> getAvailableTimezones() {
     final dir = Directory(_zoneInfoRoot);
@@ -45,6 +47,7 @@ class TzDatetimeLinux extends TzDatetimePlatform {
 
   @override
   Duration getOffset(DateTime date, String zoneId) {
+    _checkZone(zoneId);
     return Duration(
       milliseconds: ffi.getOffsetMs(zoneId, date.millisecondsSinceEpoch),
     );
@@ -52,6 +55,20 @@ class TzDatetimeLinux extends TzDatetimePlatform {
 
   @override
   int localToUtcMicros(int localAsUtcMs, String zoneId, int us) {
+    _checkZone(zoneId);
     return ffi.localToUtcMicros(localAsUtcMs, zoneId, us);
+  }
+
+  // glibc silently falls back to UTC for unknown zones.
+  void _checkZone(String zoneId) {
+    if (_zones.contains(zoneId)) return;
+    if (zoneId.isEmpty ||
+        zoneId.startsWith('/') ||
+        zoneId.split('/').contains('..') ||
+        _skipFiles.contains(zoneId) ||
+        !File('$_zoneInfoRoot/$zoneId').existsSync()) {
+      throw LocationNotFoundException(zoneId);
+    }
+    _zones.add(zoneId);
   }
 }
