@@ -1,29 +1,32 @@
 import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
+import 'package:tz_datetime_platform_interface/tzif.dart';
 
-import 'native/tz_datetime_ffi.dart' as ffi;
+import 'src/tzdata.dart';
 
 class TzDatetimeAndroid extends TzDatetimePlatform {
-  late final _zones = getAvailableTimezones().toSet();
+  late final _tzdata = Tzdata.open();
+  final _zones = <String, TzifZone>{};
 
   @override
-  List<String> getAvailableTimezones() => ffi.getTimezones();
+  List<String> getAvailableTimezones() => _tzdata.ids.toList();
 
   @override
   Duration getOffset(DateTime date, String zoneId) {
-    _checkZone(zoneId);
-    return Duration(
-      milliseconds: ffi.getOffsetMs(zoneId, date.millisecondsSinceEpoch),
-    );
+    final offsetMs = _zone(zoneId).offsetMsAt(date.millisecondsSinceEpoch);
+    return Duration(milliseconds: offsetMs);
   }
 
   @override
   int localToUtcMicros(int localAsUtcMs, String zoneId, int us) {
-    _checkZone(zoneId);
-    return ffi.localToUtcMicros(localAsUtcMs, zoneId, us);
+    return _zone(zoneId).localToUtcMicros(localAsUtcMs, us);
   }
 
-  // Bionic silently falls back to GMT for unknown zones.
-  void _checkZone(String zoneId) {
-    if (!_zones.contains(zoneId)) throw LocationNotFoundException(zoneId);
+  TzifZone _zone(String zoneId) => _zones[zoneId] ??= _load(zoneId);
+
+  TzifZone _load(String zoneId) {
+    final bytes = _tzdata.read(zoneId);
+    final zone = bytes != null ? TzifZone.tryParse(bytes) : null;
+    if (zone == null) throw LocationNotFoundException(zoneId);
+    return zone;
   }
 }

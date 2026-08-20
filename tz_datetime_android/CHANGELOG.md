@@ -1,6 +1,9 @@
 ## 1.2.2
 * fix: Snap spring-forward gap to exact transition.
 * fix: Throw LocationNotFoundException for unknown zones.
+* fix: Read TZif data in Dart instead of changing process TZ.
+* fix: Read updated tzdata on API 26-28.
+* chore: Remove native code and build hook.
 
 ## 1.2.1
 * fix: Remove Logging hooks dependency.

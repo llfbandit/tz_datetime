@@ -1,8 +1,7 @@
 import 'dart:io';
 
 import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
-
-import 'native/tz_datetime_ffi.dart' as ffi;
+import 'package:tz_datetime_platform_interface/tzif.dart';
 
 const _zoneInfoRoot = '/usr/share/zoneinfo';
 
@@ -25,7 +24,7 @@ const _skipFiles = {
 };
 
 class TzDatetimeLinux extends TzDatetimePlatform {
-  final _zones = <String>{};
+  final _zones = <String, TzifZone>{};
 
   @override
   List<String> getAvailableTimezones() {
@@ -47,28 +46,26 @@ class TzDatetimeLinux extends TzDatetimePlatform {
 
   @override
   Duration getOffset(DateTime date, String zoneId) {
-    _checkZone(zoneId);
-    return Duration(
-      milliseconds: ffi.getOffsetMs(zoneId, date.millisecondsSinceEpoch),
-    );
+    final offsetMs = _zone(zoneId).offsetMsAt(date.millisecondsSinceEpoch);
+    return Duration(milliseconds: offsetMs);
   }
 
   @override
   int localToUtcMicros(int localAsUtcMs, String zoneId, int us) {
-    _checkZone(zoneId);
-    return ffi.localToUtcMicros(localAsUtcMs, zoneId, us);
+    return _zone(zoneId).localToUtcMicros(localAsUtcMs, us);
   }
 
-  // glibc silently falls back to UTC for unknown zones.
-  void _checkZone(String zoneId) {
-    if (_zones.contains(zoneId)) return;
-    if (zoneId.isEmpty ||
-        zoneId.startsWith('/') ||
-        zoneId.split('/').contains('..') ||
-        _skipFiles.contains(zoneId) ||
-        !File('$_zoneInfoRoot/$zoneId').existsSync()) {
-      throw LocationNotFoundException(zoneId);
-    }
-    _zones.add(zoneId);
+  TzifZone _zone(String zoneId) => _zones[zoneId] ??= _load(zoneId);
+
+  TzifZone _load(String zoneId) {
+    final file = File('$_zoneInfoRoot/$zoneId');
+    final valid =
+        zoneId.isNotEmpty &&
+        !zoneId.startsWith('/') &&
+        !zoneId.split('/').contains('..') &&
+        file.existsSync();
+    final zone = valid ? TzifZone.tryParse(file.readAsBytesSync()) : null;
+    if (zone == null) throw LocationNotFoundException(zoneId);
+    return zone;
   }
 }

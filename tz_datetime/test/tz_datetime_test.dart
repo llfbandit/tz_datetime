@@ -38,6 +38,22 @@ void main() {
       expect(winterNy, equals(const Duration(hours: -5)));
     });
 
+    test('getOffset far future', () {
+      Duration offset(int year, int month, String zoneId) =>
+          TzDatetime.getOffset(DateTime.utc(year, month), zoneId);
+
+      expect(offset(2100, 1, 'Europe/Paris'), const Duration(hours: 1));
+      expect(offset(2100, 7, 'Europe/Paris'), const Duration(hours: 2));
+      expect(offset(2100, 1, 'Australia/Sydney'), const Duration(hours: 11));
+      expect(offset(2100, 7, 'Australia/Sydney'), const Duration(hours: 10));
+    });
+
+    test('spring-forward far future', () {
+      // 2100-03-28: Paris clocks advance 02:00 → 03:00.
+      final datetime = TzDatetime('Europe/Paris', 2100, 3, 28, 2, 30);
+      expect(datetime.toString(), '2100-03-28 03:00:00.000+0200');
+    });
+
     test('unknown zone', () {
       final unknown = 'Europe/Pariss';
       final throwsNotFound = throwsA(isA<LocationNotFoundException>());
