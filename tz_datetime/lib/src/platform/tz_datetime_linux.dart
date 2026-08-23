@@ -1,7 +1,8 @@
 import 'dart:io';
 
 import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
-import 'package:tz_datetime_platform_interface/tzif.dart';
+
+import 'tzif.dart';
 
 const _zoneInfoRoot = '/usr/share/zoneinfo';
 

@@ -1,7 +1,7 @@
 import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
-import 'package:tz_datetime_platform_interface/tzif.dart';
 
-import 'src/tzdata.dart';
+import 'tzdata.dart';
+import 'tzif.dart';
 
 class TzDatetimeAndroid extends TzDatetimePlatform {
   late final _tzdata = Tzdata.open();

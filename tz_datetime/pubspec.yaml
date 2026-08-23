@@ -16,9 +16,7 @@ environment:
 
 dependencies:
   tz_datetime_platform_interface: ^1.1.0
-  tz_datetime_android: ^1.2.2
   tz_datetime_darwin: ^1.1.0
-  tz_datetime_linux: ^1.1.2
   tz_datetime_web: ^1.1.1
   tz_datetime_windows: ^1.1.1
 
