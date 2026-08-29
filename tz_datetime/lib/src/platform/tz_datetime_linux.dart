@@ -1,8 +1,9 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
 
-import 'tzif.dart';
+import 'tzif_platform.dart';
 
 const _zoneInfoRoot = '/usr/share/zoneinfo';
 
@@ -24,9 +25,7 @@ const _skipFiles = {
   'zonenow.tab',
 };
 
-class TzDatetimeLinux extends TzDatetimePlatform {
-  final _zones = <String, TzifZone>{};
-
+class TzDatetimeLinux extends TzifPlatform {
   @override
   List<String> getAvailableTimezones() {
     final dir = Directory(_zoneInfoRoot);
@@ -46,27 +45,13 @@ class TzDatetimeLinux extends TzDatetimePlatform {
   }
 
   @override
-  Duration getOffset(DateTime date, String zoneId) {
-    final offsetMs = _zone(zoneId).offsetMsAt(date.millisecondsSinceEpoch);
-    return Duration(milliseconds: offsetMs);
-  }
-
-  @override
-  int localToUtcMicros(int localAsUtcMs, String zoneId, int us) {
-    return _zone(zoneId).localToUtcMicros(localAsUtcMs, us);
-  }
-
-  TzifZone _zone(String zoneId) => _zones[zoneId] ??= _load(zoneId);
-
-  TzifZone _load(String zoneId) {
+  Uint8List? readZone(String zoneId) {
     final file = File('$_zoneInfoRoot/$zoneId');
     final valid =
         zoneId.isNotEmpty &&
         !zoneId.startsWith('/') &&
         !zoneId.split('/').contains('..') &&
         file.existsSync();
-    final zone = valid ? TzifZone.tryParse(file.readAsBytesSync()) : null;
-    if (zone == null) throw LocationNotFoundException(zoneId);
-    return zone;
+    return valid ? file.readAsBytesSync() : null;
   }
 }

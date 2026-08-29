@@ -1,32 +1,15 @@
-import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
+import 'dart:typed_data';
 
 import 'tzdata.dart';
-import 'tzif.dart';
+import 'tzif_platform.dart';
 
-class TzDatetimeAndroid extends TzDatetimePlatform {
+class TzDatetimeAndroid extends TzifPlatform {
   late final _tzdata = Tzdata.open();
-  final _zones = <String, TzifZone>{};
+  late final _zoneIds = _tzdata.ids.toList()..sort();
 
   @override
-  List<String> getAvailableTimezones() => _tzdata.ids.toList();
+  List<String> getAvailableTimezones() => List.of(_zoneIds);
 
   @override
-  Duration getOffset(DateTime date, String zoneId) {
-    final offsetMs = _zone(zoneId).offsetMsAt(date.millisecondsSinceEpoch);
-    return Duration(milliseconds: offsetMs);
-  }
-
-  @override
-  int localToUtcMicros(int localAsUtcMs, String zoneId, int us) {
-    return _zone(zoneId).localToUtcMicros(localAsUtcMs, us);
-  }
-
-  TzifZone _zone(String zoneId) => _zones[zoneId] ??= _load(zoneId);
-
-  TzifZone _load(String zoneId) {
-    final bytes = _tzdata.read(zoneId);
-    final zone = bytes != null ? TzifZone.tryParse(bytes) : null;
-    if (zone == null) throw LocationNotFoundException(zoneId);
-    return zone;
-  }
+  Uint8List? readZone(String zoneId) => _tzdata.read(zoneId);
 }

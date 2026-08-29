@@ -14,6 +14,9 @@ class TzifZone {
   // Footer rule for instants after the last transition.
   final _PosixRule? _rule;
 
+  /// Fixed UTC zone, used when no zone file is installed.
+  static final utc = TzifZone._(Int64List(0), Int32List(0), 0, null);
+
   /// Parses [bytes], or returns null if they are not valid TZif data.
   static TzifZone? tryParse(Uint8List bytes) {
     try {
