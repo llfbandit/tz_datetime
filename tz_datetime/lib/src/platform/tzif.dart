@@ -129,8 +129,11 @@ class TzifZone {
         data.getUint8(pos) == 0x0A) {
       final bytes = Uint8List.sublistView(data, pos + 1);
       final end = bytes.indexOf(0x0A);
+      if (end < 0) return null;
       if (end > 0) {
+        // Reject the zone rather than drop DST rules after the last transition.
         rule = _PosixRule.tryParse(ascii.decode(bytes.sublist(0, end)));
+        if (rule == null) return null;
       }
     }
 
@@ -229,7 +232,9 @@ class _RuleDate {
   static _RuleDate? parse(String date, String? time) {
     final seconds = time != null ? _PosixRule._seconds(time) : 7200;
     if (date.startsWith('J')) {
-      return _RuleDate._('J', int.parse(date.substring(1)), 0, 0, seconds);
+      final day = int.parse(date.substring(1));
+      if (day < 1 || day > 365) return null;
+      return _RuleDate._('J', day, 0, 0, seconds);
     }
     if (date.startsWith('M')) {
       final p = date.substring(1).split('.').map(int.parse).toList();
@@ -238,7 +243,9 @@ class _RuleDate {
       }
       return _RuleDate._('M', p[0], p[1], p[2], seconds);
     }
-    return _RuleDate._('n', int.parse(date), 0, 0, seconds);
+    final day = int.parse(date);
+    if (day > 365) return null;
+    return _RuleDate._('n', day, 0, 0, seconds);
   }
 
   /// Returns the transition as seconds since epoch in local time for [year].
