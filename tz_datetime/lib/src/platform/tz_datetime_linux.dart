@@ -10,24 +10,16 @@ const _zoneInfoRoot = '/usr/share/zoneinfo';
 // Subdirectories that duplicate the main zone set and should be excluded.
 const _skipTopDirs = {'posix', 'right'};
 
-// Non-timezone files present in the zoneinfo directory.
-const _skipFiles = {
-  '+VERSION',
-  'iso3166.tab',
-  'leap-seconds.list',
-  'leapseconds',
-  'localtime',
-  'posixrules',
-  'tzdata.zi',
-  'stzdata.zi',
-  'zone.tab',
-  'zone1970.tab',
-  'zonenow.tab',
-};
+// TZif files that are not zones.
+const _skipFiles = {'localtime', 'posixrules'};
 
 class TzDatetimeLinux extends TzifPlatform {
+  late final _zoneIds = _listZones();
+
   @override
-  List<String> getAvailableTimezones() {
+  List<String> getAvailableTimezones() => List.of(_zoneIds);
+
+  List<String> _listZones() {
     final dir = Directory(_zoneInfoRoot);
     if (!dir.existsSync()) {
       throw TimeZoneInitException('tzdata not found at $_zoneInfoRoot');
@@ -35,23 +27,38 @@ class TzDatetimeLinux extends TzifPlatform {
 
     final result = <String>[];
     for (final entity in dir.listSync(recursive: true, followLinks: false)) {
-      if (entity is! File) continue;
+      if (entity is Directory) continue;
       final rel = entity.path.substring(_zoneInfoRoot.length + 1);
       final top = rel.contains('/') ? rel.substring(0, rel.indexOf('/')) : rel;
+      // Check names first; opening every file is the slow part.
       if (_skipTopDirs.contains(top) || _skipFiles.contains(rel)) continue;
-      result.add(rel);
+      if (_isTzif(entity.path)) result.add(rel);
     }
     return result..sort();
   }
 
   @override
   Uint8List? readZone(String zoneId) {
-    final file = File('$_zoneInfoRoot/$zoneId');
+    final path = '$_zoneInfoRoot/$zoneId';
     final valid =
         zoneId.isNotEmpty &&
         !zoneId.startsWith('/') &&
         !zoneId.split('/').contains('..') &&
-        file.existsSync();
-    return valid ? file.readAsBytesSync() : null;
+        _isTzif(path);
+    return valid ? File(path).readAsBytesSync() : null;
+  }
+}
+
+// Zone files, and symlinked aliases such as UTC, start with the TZif magic.
+bool _isTzif(String path) {
+  try {
+    final file = File(path).openSync();
+    try {
+      return String.fromCharCodes(file.readSync(4)) == 'TZif';
+    } finally {
+      file.closeSync();
+    }
+  } on FileSystemException {
+    return false;
   }
 }

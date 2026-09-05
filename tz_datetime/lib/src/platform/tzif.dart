@@ -86,13 +86,17 @@ class TzifZone {
 
     // Version 2+ repeats the data with 64-bit times, followed by a footer.
     if (data.getUint8(4) >= 0x32) {
-      pos += header.v1DataLength;
+      pos += header.dataLength(timeSize);
       if (!_hasMagic(data, pos)) return null;
       header = _Header(data, pos);
       pos += _Header.size;
       timeSize = 8;
     }
     if (header.typecnt == 0) return null;
+    // Check counts before allocating from them.
+    if (pos + header.dataLength(timeSize) > data.lengthInBytes) return null;
+    // Leap-second zones (right/) use a different time scale.
+    if (header.leapcnt > 0) return null;
 
     final transitions = Int64List(header.timecnt);
     for (var i = 0; i < header.timecnt; i++) {
@@ -157,8 +161,13 @@ class _Header {
 
   final int isutcnt, isstdcnt, leapcnt, timecnt, typecnt, charcnt;
 
-  int get v1DataLength =>
-      timecnt * 5 + typecnt * 6 + charcnt + leapcnt * 8 + isstdcnt + isutcnt;
+  int dataLength(int timeSize) =>
+      timecnt * (timeSize + 1) +
+      typecnt * 6 +
+      charcnt +
+      leapcnt * (timeSize + 4) +
+      isstdcnt +
+      isutcnt;
 }
 
 /// POSIX TZ rule such as `CET-1CEST,M3.5.0,M10.5.0/3`.

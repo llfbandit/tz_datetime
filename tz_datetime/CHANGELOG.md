@@ -6,6 +6,7 @@
 * fix: Snap spring-forward gap to exact transition.
 * fix: Read TZif data in Dart instead of changing process TZ.
 * fix: Read updated tzdata on Android API 26-28.
+* fix: List symlinked zone aliases on Linux.
 
 ## 1.1.0
 
