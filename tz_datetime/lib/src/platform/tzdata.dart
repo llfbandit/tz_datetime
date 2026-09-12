@@ -3,26 +3,40 @@ import 'dart:typed_data';
 
 import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
 
-// Same lookup order as bionic.
+// Known copies; bionic's lookup order varies across API levels.
 const _paths = [
-  '/apex/com.android.tzdata/etc/tz/tzdata', // API 29+
-  '/data/misc/zoneinfo/current/tzdata', // API 26-28 with tzdata update
-  '/system/usr/share/zoneinfo/tzdata', // API 26-28
+  '/apex/com.android.tzdata/etc/tz/tzdata', // API 29+ module
+  '/data/misc/zoneinfo/current/tzdata', // API 26-30 updates
+  '/data/misc/zoneinfo/tzdata', // API 21-25 updates
+  '/system/usr/share/zoneinfo/tzdata', // System image
 ];
 
 /// Android packed tzdata file: a header, an index of zones, then TZif blobs.
+///
+/// Keeps the file open so reads match the index even if an update replaces it.
 class Tzdata {
-  Tzdata._(this._path, this._entries);
+  Tzdata._(this._file, this.version, this._entries);
 
-  final String _path;
+  final RandomAccessFile _file;
   final Map<String, (int, int)> _entries;
 
-  static Tzdata open() {
-    for (final path in _paths) {
-      final file = File(path);
-      if (file.existsSync()) return Tzdata._(path, _readIndex(file));
+  /// IANA release such as `2024a`.
+  final String version;
+
+  /// Opens the newest readable and valid file of [paths], the first on ties.
+  static Tzdata open([List<String> paths = _paths]) {
+    Tzdata? newest;
+    for (final path in paths) {
+      final tzdata = _tryOpen(path);
+      if (tzdata == null) continue;
+      if (newest == null || tzdata.version.compareTo(newest.version) > 0) {
+        newest?.close();
+        newest = tzdata;
+      } else {
+        tzdata.close();
+      }
     }
-    throw TimeZoneInitException('tzdata not found');
+    return newest ?? (throw TimeZoneInitException('tzdata not found'));
   }
 
   Iterable<String> get ids => _entries.keys;
@@ -32,44 +46,63 @@ class Tzdata {
     final entry = _entries[id];
     if (entry == null) return null;
 
-    final file = File(_path).openSync();
-    try {
-      file.setPositionSync(entry.$1);
-      return file.readSync(entry.$2);
-    } finally {
-      file.closeSync();
-    }
+    _file.setPositionSync(entry.$1);
+    return _file.readSync(entry.$2);
   }
 
+  /// Closes the file; later reads throw.
+  void close() => _file.closeSync();
+
+  // Returns null if the file is missing, unreadable or malformed.
   // Index entry: name[40], start, length, rawOffset (big-endian int32).
-  static Map<String, (int, int)> _readIndex(File file) {
-    final raf = file.openSync();
+  static Tzdata? _tryOpen(String path) {
+    final RandomAccessFile raf;
     try {
-      final header = ByteData.sublistView(raf.readSync(24));
-      if (String.fromCharCodes(header.buffer.asUint8List(0, 6)) != 'tzdata') {
-        throw TimeZoneInitException('Invalid tzdata header');
+      raf = File(path).openSync();
+    } on FileSystemException {
+      return null;
+    }
+
+    Tzdata? tzdata;
+    try {
+      final header = raf.readSync(24);
+      if (header.length < 24 ||
+          String.fromCharCodes(header, 0, 6) != 'tzdata') {
+        return null;
       }
-      final indexOffset = header.getUint32(12);
-      final dataOffset = header.getUint32(16);
+      final indexOffset = ByteData.sublistView(header).getUint32(12);
+      final dataOffset = ByteData.sublistView(header).getUint32(16);
+      final length = raf.lengthSync();
+      if (indexOffset < 24 || indexOffset > dataOffset || dataOffset > length) {
+        return null;
+      }
 
       raf.setPositionSync(indexOffset);
-      final index = ByteData.sublistView(
-        raf.readSync(dataOffset - indexOffset),
-      );
+      final index = raf.readSync(dataOffset - indexOffset);
+      if (index.length != dataOffset - indexOffset) return null;
+      final view = ByteData.sublistView(index);
 
       final entries = <String, (int, int)>{};
-      for (var pos = 0; pos + 52 <= index.lengthInBytes; pos += 52) {
-        final name = index.buffer.asUint8List(index.offsetInBytes + pos, 40);
+      for (var pos = 0; pos + 52 <= index.length; pos += 52) {
+        final start = dataOffset + view.getUint32(pos + 40);
+        final size = view.getUint32(pos + 44);
+        if (start + size > length) continue;
+
+        final name = Uint8List.sublistView(index, pos, pos + 40);
         final end = name.indexOf(0);
-        final id = String.fromCharCodes(end < 0 ? name : name.sublist(0, end));
-        entries[id] = (
-          dataOffset + index.getUint32(pos + 40),
-          index.getUint32(pos + 44),
+        entries[String.fromCharCodes(name, 0, end < 0 ? 40 : end)] = (
+          start,
+          size,
         );
       }
-      return entries;
+      final version = String.fromCharCodes(
+        header.sublist(6, 12).takeWhile((c) => c != 0),
+      );
+      return tzdata = Tzdata._(raf, version, entries);
+    } on FileSystemException {
+      return null;
     } finally {
-      raf.closeSync();
+      if (tzdata == null) raf.closeSync();
     }
   }
 }

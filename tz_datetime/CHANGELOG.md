@@ -5,7 +5,7 @@
 * feat: Merge Android and Linux implementations.
 * fix: Snap spring-forward gap to exact transition.
 * fix: Read TZif data in Dart instead of changing process TZ.
-* fix: Read updated tzdata on Android API 26-28.
+* fix: Read the newest tzdata copy on Android.
 * fix: List symlinked zone aliases on Linux.
 
 ## 1.1.0
