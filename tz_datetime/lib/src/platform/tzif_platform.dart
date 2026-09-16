@@ -31,6 +31,9 @@ abstract class TzifPlatform extends TzDatetimePlatform {
       bytes = readZone(zoneId);
     } on FileSystemException catch (e) {
       throw TimeZoneInitException('Cannot read $zoneId: ${e.message}');
+    } on TimeZoneInitException {
+      if (_utcIds.contains(zoneId)) return TzifZone.utc;
+      rethrow;
     }
 
     if (bytes == null) {
