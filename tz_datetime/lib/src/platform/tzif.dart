@@ -59,19 +59,21 @@ class TzifZone {
     var resultMs = localAsUtcMs - adjOffset;
 
     if (localOffset != adjOffset && adjOffset != offsetMsAt(resultMs)) {
-      // Spring-forward gap: binary-search for the first post-gap instant.
+      // Spring-forward gap: binary-search seconds for the first post-gap instant.
       final postGapOffset = localOffset > adjOffset ? localOffset : adjOffset;
-      var lo = adjOffset == postGapOffset ? resultMs : adjustedInstant;
-      var hi = adjOffset == postGapOffset ? adjustedInstant : resultMs;
+      final loMs = adjOffset == postGapOffset ? resultMs : adjustedInstant;
+      final hiMs = adjOffset == postGapOffset ? adjustedInstant : resultMs;
+      var lo = (loMs - loMs % 1000) ~/ 1000;
+      var hi = (hiMs - hiMs % 1000) ~/ 1000;
       while (hi - lo > 1) {
         final mid = lo + (hi - lo) ~/ 2;
-        if (offsetMsAt(mid) == postGapOffset) {
+        if (offsetMsAt(mid * 1000) == postGapOffset) {
           hi = mid;
         } else {
           lo = mid;
         }
       }
-      resultMs = hi;
+      resultMs = hi * 1000;
     }
 
     return resultMs * 1000 + us;
@@ -206,17 +208,27 @@ class _PosixRule {
     final dst = this.dst;
     if (dst == null) return std;
 
+    final local = t + std;
+    if (local < _yearFrom || local >= _yearTo) _cacheYear(local, dst);
+
+    final inDst = _startUtc < _endUtc
+        ? t >= _startUtc && t < _endUtc
+        : !(t >= _endUtc && t < _startUtc);
+    return inDst ? dst : std;
+  }
+
+  // Bounds and transitions of the last year looked up, in seconds.
+  int _yearFrom = 0, _yearTo = 0, _startUtc = 0, _endUtc = 0;
+
+  void _cacheYear(int local, int dst) {
     final year = DateTime.fromMillisecondsSinceEpoch(
-      (t + std) * 1000,
+      local * 1000,
       isUtc: true,
     ).year;
-    final startUtc = start!.localSeconds(year) - std;
-    final endUtc = end!.localSeconds(year) - dst;
-
-    final inDst = startUtc < endUtc
-        ? t >= startUtc && t < endUtc
-        : !(t >= endUtc && t < startUtc);
-    return inDst ? dst : std;
+    _yearFrom = DateTime.utc(year).millisecondsSinceEpoch ~/ 1000;
+    _yearTo = DateTime.utc(year + 1).millisecondsSinceEpoch ~/ 1000;
+    _startUtc = start!.localSeconds(year) - std;
+    _endUtc = end!.localSeconds(year) - dst;
   }
 
   static int _seconds(String value) {
