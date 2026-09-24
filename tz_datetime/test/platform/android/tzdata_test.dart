@@ -5,8 +5,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
-import 'package:tz_datetime/src/platform/tzdata.dart';
-import 'package:tz_datetime/src/platform/tzif.dart';
+import 'package:tz_datetime/src/platform/android/tzdata.dart';
+import 'package:tz_datetime/src/platform/tzif/tzif.dart';
 import 'package:tz_datetime/tz_datetime.dart';
 
 void main() {

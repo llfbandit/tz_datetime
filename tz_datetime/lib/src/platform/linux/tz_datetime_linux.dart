@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
 
-import 'tzif_platform.dart';
+import '../tzif/tzif_platform.dart';
 
 // Fallbacks after TZDIR; NixOS uses /etc/zoneinfo.
 const _defaultRoots = ['/usr/share/zoneinfo', '/etc/zoneinfo'];

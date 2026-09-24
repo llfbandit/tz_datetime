@@ -1,7 +1,5 @@
 import 'dart:ffi';
 
-import 'package:ffi/ffi.dart';
-
 import 'icu_bindings.dart';
 
 // UCalendarType
@@ -19,7 +17,7 @@ final _bindings = IcuBindings(DynamicLibrary.open('icu.dll'));
 // --- Public API --------------------------------------------------------------
 
 int localToUtcMicros(String zoneId, int localAsUtcMs, int us) {
-  return using((arena) {
+  return _using((arena) {
     final status = arena<UErrorCode>()..value = 0;
     final zonePtr = _toUChar(zoneId, arena);
 
@@ -93,7 +91,7 @@ int localToUtcMicros(String zoneId, int localAsUtcMs, int us) {
 }
 
 Duration getOffset(String zoneId, int millisSinceEpoch) {
-  return using((arena) {
+  return _using((arena) {
     final status = arena<UErrorCode>()..value = 0;
     final zonePtr = _toUChar(zoneId, arena);
 
@@ -127,7 +125,7 @@ Duration getOffset(String zoneId, int millisSinceEpoch) {
 }
 
 List<String> getAvailableTimezones() {
-  return using((arena) {
+  return _using((arena) {
     final status = arena<UErrorCode>()..value = 0;
 
     final en = _bindings.ucal_openTimeZones(status);
@@ -157,6 +155,47 @@ List<String> getAvailableTimezones() {
 }
 
 // --- Helpers -----------------------------------------------------------------
+
+final _ole32 = DynamicLibrary.open('ole32.dll');
+final _coTaskMemAlloc = _ole32
+    .lookupFunction<Pointer Function(Size), Pointer Function(int)>(
+      'CoTaskMemAlloc',
+    );
+final _coTaskMemFree = _ole32
+    .lookupFunction<Void Function(Pointer), void Function(Pointer)>(
+      'CoTaskMemFree',
+    );
+
+/// Runs [body] and frees everything it allocated from the arena.
+R _using<R>(R Function(_Arena arena) body) {
+  final arena = _Arena();
+  try {
+    return body(arena);
+  } finally {
+    arena.releaseAll();
+  }
+}
+
+/// Allocator that frees all its allocations at once.
+class _Arena implements Allocator {
+  final _pointers = <Pointer>[];
+
+  @override
+  Pointer<T> allocate<T extends NativeType>(int byteCount, {int? alignment}) {
+    final pointer = _coTaskMemAlloc(byteCount);
+    if (pointer == nullptr) throw OutOfMemoryError();
+    _pointers.add(pointer);
+    return pointer.cast();
+  }
+
+  @override
+  void free(Pointer pointer) {}
+
+  void releaseAll() {
+    _pointers.forEach(_coTaskMemFree);
+    _pointers.clear();
+  }
+}
 
 void _checkStatus(int status, String fn) {
   // ICU: status > 0 means error (U_FAILURE), <= 0 is success or warning

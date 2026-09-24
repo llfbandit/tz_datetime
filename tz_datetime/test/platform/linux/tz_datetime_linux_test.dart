@@ -4,7 +4,7 @@ library;
 import 'dart:io';
 
 import 'package:test/test.dart';
-import 'package:tz_datetime/src/platform/tz_datetime_linux.dart';
+import 'package:tz_datetime/src/platform/linux/tz_datetime_linux.dart';
 import 'package:tz_datetime/tz_datetime.dart';
 
 void main() {

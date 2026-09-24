@@ -5,7 +5,7 @@ description: Bindings for ICU (Windows)
 
 language: c
 output:
-  bindings: 'lib/src/icu_bindings.dart'
+  bindings: 'lib/src/platform/windows/icu_bindings.dart'
 
 exclude-all-by-default: true
 
@@ -35,4 +35,4 @@ typedefs:
 
 headers:
   entry-points:
-    - 'src/icu_minimal.h'
+    - 'tool/icu_minimal.h'

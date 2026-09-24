@@ -1,6 +1,6 @@
 import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
 
-import 'src/icu.dart' as icu;
+import 'icu.dart' as icu;
 
 class TzDatetimeWindows extends TzDatetimePlatform {
   late final _zones = getAvailableTimezones().toSet();
