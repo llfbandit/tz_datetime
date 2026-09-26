@@ -1,4 +1,7 @@
 import 'dart:ffi';
+import 'dart:math';
+
+import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
 
 import 'icu_bindings.dart';
 
@@ -12,149 +15,145 @@ const _fieldDstOffset = 16;
 // UTimeZoneTransitionType
 const _tzTransitionNext = 0;
 
-final _bindings = IcuBindings(DynamicLibrary.open('icu.dll'));
+// ICU's UCAL_UNKNOWN_ZONE_ID, resolved for unrecognised zone IDs.
+const _unknownZoneId = 'Etc/Unknown';
 
-// --- Public API --------------------------------------------------------------
+final _bindings = _openIcu();
+const _coTaskMem = _CoTaskMemAllocator();
+
+// Calendars stay open for the isolate's lifetime, one per zone.
+final _calendars = <String, Pointer<UCalendar>>{};
+
+// Scratch buffers reused by every call.
+final _status = _coTaskMem<UErrorCode>();
+final _length = _coTaskMem<Int32>();
+final _transition = _coTaskMem<Double>();
+
+Duration getOffset(String zoneId, int utcMs) =>
+    Duration(milliseconds: _offsetAt(_calendar(zoneId), utcMs));
 
 int localToUtcMicros(String zoneId, int localAsUtcMs, int us) {
-  return _using((arena) {
-    final status = arena<UErrorCode>()..value = 0;
-    final zonePtr = _toUChar(zoneId, arena);
+  final cal = _calendar(zoneId);
+  final localOffset = _offsetAt(cal, localAsUtcMs);
+  final adjustedInstant = localAsUtcMs - localOffset;
+  final adjOffset = _offsetAt(cal, adjustedInstant);
+  var resultMs = localAsUtcMs - adjOffset;
 
-    final cal = _bindings.ucal_open(
-      zonePtr,
-      zoneId.length,
-      nullptr,
-      _ucalDefault,
-      status,
+  if (localOffset != adjOffset && adjOffset != _offsetAt(cal, resultMs)) {
+    // Spring-forward gap: ask ICU for the transition after the pre-gap instant.
+    final loMs = adjOffset > localOffset ? resultMs : adjustedInstant;
+
+    _status.value = 0;
+    _bindings.ucal_setMillis(cal, loMs.toDouble(), _status);
+    final found = _bindings.ucal_getTimeZoneTransitionDate(
+      cal,
+      _tzTransitionNext,
+      _transition,
+      _status,
     );
-    _checkStatus(status.value, 'ucal_open');
+    _checkStatus('ucal_getTimeZoneTransitionDate');
 
-    try {
-      // Gets total offset (zone + DST) in ms for the calendar at the given UTC time.
-      // Reuses the open calendar to avoid repeated ucal_open/close overhead.
-      int offsetAt(double ms) {
-        status.value = 0;
-        _bindings.ucal_setMillis(cal, ms, status);
-        _checkStatus(status.value, 'ucal_setMillis');
+    if (found != 0) resultMs = _transition.value.round();
+  }
 
-        status.value = 0;
-        final raw = _bindings.ucal_get(cal, _fieldZoneOffset, status);
-        _checkStatus(status.value, 'ucal_get(ZONE_OFFSET)');
-
-        status.value = 0;
-        final dst = _bindings.ucal_get(cal, _fieldDstOffset, status);
-        _checkStatus(status.value, 'ucal_get(DST_OFFSET)');
-
-        return raw + dst;
-      }
-
-      final localOffset = offsetAt(localAsUtcMs.toDouble());
-      final adjustedInstant = localAsUtcMs - localOffset;
-      final adjOffset = offsetAt(adjustedInstant.toDouble());
-      var resultMs = localAsUtcMs - adjOffset;
-
-      if (localOffset != adjOffset) {
-        if (adjOffset != offsetAt(resultMs.toDouble())) {
-          // Spring-forward gap: ask ICU for the exact transition UTC instant.
-          // This replaces the binary search with a single ucal_getTimeZoneTransitionDate call.
-          final postGapOffset = localOffset > adjOffset
-              ? localOffset
-              : adjOffset;
-          final loMs = adjOffset == postGapOffset ? resultMs : adjustedInstant;
-
-          status.value = 0;
-          _bindings.ucal_setMillis(cal, loMs.toDouble(), status);
-          _checkStatus(status.value, 'ucal_setMillis');
-
-          final transitionPtr = arena<Double>();
-          status.value = 0;
-          final found = _bindings.ucal_getTimeZoneTransitionDate(
-            cal,
-            _tzTransitionNext,
-            transitionPtr,
-            status,
-          );
-          _checkStatus(status.value, 'ucal_getTimeZoneTransitionDate');
-
-          if (found != 0) {
-            resultMs = transitionPtr.value.round();
-          }
-        }
-      }
-
-      return resultMs * 1000 + us;
-    } finally {
-      _bindings.ucal_close(cal);
-    }
-  });
-}
-
-Duration getOffset(String zoneId, int millisSinceEpoch) {
-  return _using((arena) {
-    final status = arena<UErrorCode>()..value = 0;
-    final zonePtr = _toUChar(zoneId, arena);
-
-    final cal = _bindings.ucal_open(
-      zonePtr,
-      zoneId.length,
-      nullptr,
-      _ucalDefault,
-      status,
-    );
-    _checkStatus(status.value, 'ucal_open');
-
-    try {
-      status.value = 0;
-      _bindings.ucal_setMillis(cal, millisSinceEpoch.toDouble(), status);
-      _checkStatus(status.value, 'ucal_setMillis');
-
-      status.value = 0;
-      final rawOffset = _bindings.ucal_get(cal, _fieldZoneOffset, status);
-      _checkStatus(status.value, 'ucal_get(ZONE_OFFSET)');
-
-      status.value = 0;
-      final dstOffset = _bindings.ucal_get(cal, _fieldDstOffset, status);
-      _checkStatus(status.value, 'ucal_get(DST_OFFSET)');
-
-      return Duration(milliseconds: rawOffset + dstOffset);
-    } finally {
-      _bindings.ucal_close(cal);
-    }
-  });
+  return resultMs * 1000 + us;
 }
 
 List<String> getAvailableTimezones() {
-  return _using((arena) {
-    final status = arena<UErrorCode>()..value = 0;
+  _status.value = 0;
+  final en = _bindings.ucal_openTimeZones(_status);
+  _checkStatus('ucal_openTimeZones');
 
-    final en = _bindings.ucal_openTimeZones(status);
-    _checkStatus(status.value, 'ucal_openTimeZones');
-
-    try {
-      status.value = 0;
-      final count = _bindings.uenum_count(en, status);
-      _checkStatus(status.value, 'uenum_count');
-
-      final lenPtr = arena<Int32>();
-      final result = <String>[];
-
-      for (var i = 0; i < count; i++) {
-        status.value = 0;
-        final chars = _bindings.uenum_unext(en, lenPtr, status);
-        if (chars == nullptr) break;
-        _checkStatus(status.value, 'uenum_unext');
-        result.add(String.fromCharCodes(chars.asTypedList(lenPtr.value)));
-      }
-
-      return result;
-    } finally {
-      _bindings.uenum_close(en);
+  try {
+    final result = <String>[];
+    while (true) {
+      final chars = _bindings.uenum_unext(en, _length, _status);
+      _checkStatus('uenum_unext');
+      if (chars == nullptr) return result;
+      result.add(String.fromCharCodes(chars.asTypedList(_length.value)));
     }
-  });
+  } finally {
+    _bindings.uenum_close(en);
+  }
 }
 
-// --- Helpers -----------------------------------------------------------------
+// Windows 10 1903+ ships icu.dll; 1703-1809 ship icuin.dll and icuuc.dll.
+IcuBindings _openIcu() {
+  try {
+    return IcuBindings(DynamicLibrary.open('icu.dll'));
+  } on ArgumentError {
+    // Fall back to the split libraries below.
+  }
+
+  try {
+    final i18n = DynamicLibrary.open('icuin.dll');
+    final common = DynamicLibrary.open('icuuc.dll');
+    return IcuBindings.fromLookup(
+      <T extends NativeType>(symbol) => i18n.providesSymbol(symbol)
+          ? i18n.lookup<T>(symbol)
+          : common.lookup<T>(symbol),
+    );
+  } on ArgumentError catch (e) {
+    throw TimeZoneInitException('ICU not available: ${e.message}');
+  }
+}
+
+Pointer<UCalendar> _calendar(String zoneId) =>
+    _calendars[zoneId] ??= _open(zoneId);
+
+// ICU silently falls back to Etc/Unknown for unknown zones.
+Pointer<UCalendar> _open(String zoneId) {
+  // An empty ID would open the host's default zone.
+  if (zoneId.isEmpty) throw LocationNotFoundException(zoneId);
+
+  // Holds the requested ID, then the resolved one.
+  final capacity = max(zoneId.length, _unknownZoneId.length);
+  final buffer = _coTaskMem<UChar>(capacity);
+  try {
+    buffer.asTypedList(capacity).setAll(0, zoneId.codeUnits);
+    _status.value = 0;
+    final cal = _bindings.ucal_open(
+      buffer,
+      zoneId.length,
+      nullptr,
+      _ucalDefault,
+      _status,
+    );
+    _checkStatus('ucal_open');
+
+    final length = _bindings.ucal_getTimeZoneID(cal, buffer, capacity, _status);
+    // On failure the buffer still holds zoneId, which would pass as known.
+    if (_status.value > 0) _bindings.ucal_close(cal);
+    _checkStatus('ucal_getTimeZoneID');
+    final resolved = buffer.asTypedList(min(length, capacity));
+    if (String.fromCharCodes(resolved) == _unknownZoneId) {
+      _bindings.ucal_close(cal);
+      throw LocationNotFoundException(zoneId);
+    }
+    return cal;
+  } finally {
+    _coTaskMem.free(buffer);
+  }
+}
+
+// Total offset (zone + DST) in ms at [utcMs].
+int _offsetAt(Pointer<UCalendar> cal, int utcMs) {
+  // ICU calls are no-ops once status holds an error, so one check suffices.
+  _status.value = 0;
+  _bindings.ucal_setMillis(cal, utcMs.toDouble(), _status);
+  final raw = _bindings.ucal_get(cal, _fieldZoneOffset, _status);
+  final dst = _bindings.ucal_get(cal, _fieldDstOffset, _status);
+  _checkStatus('ucal_get');
+  return raw + dst;
+}
+
+void _checkStatus(String fn) {
+  // ICU: status > 0 means error (U_FAILURE), <= 0 is success or warning.
+  final status = _status.value;
+  if (status > 0) {
+    throw TimeZoneInitException('ICU error in $fn (code $status)');
+  }
+}
 
 final _ole32 = DynamicLibrary.open('ole32.dll');
 final _coTaskMemAlloc = _ole32
@@ -166,48 +165,17 @@ final _coTaskMemFree = _ole32
       'CoTaskMemFree',
     );
 
-/// Runs [body] and frees everything it allocated from the arena.
-R _using<R>(R Function(_Arena arena) body) {
-  final arena = _Arena();
-  try {
-    return body(arena);
-  } finally {
-    arena.releaseAll();
-  }
-}
-
-/// Allocator that frees all its allocations at once.
-class _Arena implements Allocator {
-  final _pointers = <Pointer>[];
+/// Allocator over CoTaskMemAlloc, as package:ffi uses on Windows.
+final class _CoTaskMemAllocator implements Allocator {
+  const _CoTaskMemAllocator();
 
   @override
   Pointer<T> allocate<T extends NativeType>(int byteCount, {int? alignment}) {
     final pointer = _coTaskMemAlloc(byteCount);
     if (pointer == nullptr) throw OutOfMemoryError();
-    _pointers.add(pointer);
     return pointer.cast();
   }
 
   @override
-  void free(Pointer pointer) {}
-
-  void releaseAll() {
-    _pointers.forEach(_coTaskMemFree);
-    _pointers.clear();
-  }
-}
-
-void _checkStatus(int status, String fn) {
-  // ICU: status > 0 means error (U_FAILURE), <= 0 is success or warning
-  if (status > 0) throw Exception('ICU error in $fn (code $status)');
-}
-
-Pointer<UChar> _toUChar(String s, Allocator alloc) {
-  final units = s.codeUnits;
-  final ptr = alloc<UChar>(units.length + 1);
-  for (var i = 0; i < units.length; i++) {
-    ptr[i] = units[i];
-  }
-  ptr[units.length] = 0;
-  return ptr;
+  void free(Pointer pointer) => _coTaskMemFree(pointer);
 }

@@ -50,7 +50,7 @@ class IcuBindings {
           int,
           ffi.Pointer<UErrorCode>,
         )
-      >();
+      >(isLeaf: true);
 
   void ucal_close(ffi.Pointer<UCalendar> cal) {
     return _ucal_close(cal);
@@ -61,7 +61,7 @@ class IcuBindings {
         'ucal_close',
       );
   late final _ucal_close = _ucal_closePtr
-      .asFunction<void Function(ffi.Pointer<UCalendar>)>();
+      .asFunction<void Function(ffi.Pointer<UCalendar>)>(isLeaf: true);
 
   void ucal_setMillis(
     ffi.Pointer<UCalendar> cal,
@@ -84,7 +84,7 @@ class IcuBindings {
   late final _ucal_setMillis = _ucal_setMillisPtr
       .asFunction<
         void Function(ffi.Pointer<UCalendar>, double, ffi.Pointer<UErrorCode>)
-      >();
+      >(isLeaf: true);
 
   int ucal_get(
     ffi.Pointer<UCalendar> cal,
@@ -107,7 +107,7 @@ class IcuBindings {
   late final _ucal_get = _ucal_getPtr
       .asFunction<
         int Function(ffi.Pointer<UCalendar>, int, ffi.Pointer<UErrorCode>)
-      >();
+      >(isLeaf: true);
 
   int ucal_getTimeZoneTransitionDate(
     ffi.Pointer<UCalendar> cal,
@@ -130,15 +130,44 @@ class IcuBindings {
         >
       >('ucal_getTimeZoneTransitionDate');
   late final _ucal_getTimeZoneTransitionDate =
-      _ucal_getTimeZoneTransitionDatePtr
-          .asFunction<
-            int Function(
-              ffi.Pointer<UCalendar>,
-              int,
-              ffi.Pointer<UDate>,
-              ffi.Pointer<UErrorCode>,
-            )
-          >();
+      _ucal_getTimeZoneTransitionDatePtr.asFunction<
+        int Function(
+          ffi.Pointer<UCalendar>,
+          int,
+          ffi.Pointer<UDate>,
+          ffi.Pointer<UErrorCode>,
+        )
+      >(isLeaf: true);
+
+  int ucal_getTimeZoneID(
+    ffi.Pointer<UCalendar> cal,
+    ffi.Pointer<UChar> result,
+    int resultLength,
+    ffi.Pointer<UErrorCode> status,
+  ) {
+    return _ucal_getTimeZoneID(cal, result, resultLength, status);
+  }
+
+  late final _ucal_getTimeZoneIDPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int32 Function(
+            ffi.Pointer<UCalendar>,
+            ffi.Pointer<UChar>,
+            ffi.Int32,
+            ffi.Pointer<UErrorCode>,
+          )
+        >
+      >('ucal_getTimeZoneID');
+  late final _ucal_getTimeZoneID = _ucal_getTimeZoneIDPtr
+      .asFunction<
+        int Function(
+          ffi.Pointer<UCalendar>,
+          ffi.Pointer<UChar>,
+          int,
+          ffi.Pointer<UErrorCode>,
+        )
+      >(isLeaf: true);
 
   ffi.Pointer<UEnumeration> ucal_openTimeZones(ffi.Pointer<UErrorCode> ec) {
     return _ucal_openTimeZones(ec);
@@ -151,27 +180,9 @@ class IcuBindings {
         >
       >('ucal_openTimeZones');
   late final _ucal_openTimeZones = _ucal_openTimeZonesPtr
-      .asFunction<
-        ffi.Pointer<UEnumeration> Function(ffi.Pointer<UErrorCode>)
-      >();
-
-  int uenum_count(
-    ffi.Pointer<UEnumeration> en,
-    ffi.Pointer<UErrorCode> status,
-  ) {
-    return _uenum_count(en, status);
-  }
-
-  late final _uenum_countPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Int32 Function(ffi.Pointer<UEnumeration>, ffi.Pointer<UErrorCode>)
-        >
-      >('uenum_count');
-  late final _uenum_count = _uenum_countPtr
-      .asFunction<
-        int Function(ffi.Pointer<UEnumeration>, ffi.Pointer<UErrorCode>)
-      >();
+      .asFunction<ffi.Pointer<UEnumeration> Function(ffi.Pointer<UErrorCode>)>(
+        isLeaf: true,
+      );
 
   ffi.Pointer<UChar> uenum_unext(
     ffi.Pointer<UEnumeration> en,
@@ -198,7 +209,7 @@ class IcuBindings {
           ffi.Pointer<ffi.Int32>,
           ffi.Pointer<UErrorCode>,
         )
-      >();
+      >(isLeaf: true);
 
   void uenum_close(ffi.Pointer<UEnumeration> en) {
     return _uenum_close(en);
@@ -209,7 +220,7 @@ class IcuBindings {
         'uenum_close',
       );
   late final _uenum_close = _uenum_closePtr
-      .asFunction<void Function(ffi.Pointer<UEnumeration>)>();
+      .asFunction<void Function(ffi.Pointer<UEnumeration>)>(isLeaf: true);
 }
 
 typedef UChar = ffi.Uint16;

@@ -16,10 +16,14 @@ functions:
     - ucal_setMillis
     - ucal_get
     - ucal_getTimeZoneTransitionDate
+    - ucal_getTimeZoneID
     - ucal_openTimeZones
-    - uenum_count
     - uenum_unext
     - uenum_close
+  # ICU never calls back into Dart, so skip the full VM transition.
+  leaf:
+    include:
+      - '.*'
 
 structs:
   include:
