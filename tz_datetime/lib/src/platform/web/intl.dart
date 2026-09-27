@@ -20,5 +20,7 @@ extension type DateTimeFormatPart._(JSObject _) implements JSObject {
 
 extension DateTimeFormatExtension on DateTimeFormat {
   external JSString format(JSAny /* JSObject | num */ date);
-  external JSArray<DateTimeFormatPart> formatToParts(JSAny /* JSObject | num */ date);
+  external JSArray<DateTimeFormatPart> formatToParts(
+    JSAny /* JSObject | num */ date,
+  );
 }

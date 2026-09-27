@@ -17,7 +17,6 @@ environment:
 dependencies:
   tz_datetime_platform_interface: ^1.1.0
   tz_datetime_darwin: ^1.1.0
-  tz_datetime_web: ^1.1.1
 
 dev_dependencies:
   lints: ^6.0.0

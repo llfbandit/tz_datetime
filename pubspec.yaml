@@ -14,8 +14,6 @@ workspace:
   - tz_datetime_darwin
   - tz_datetime_darwin/example
   - tz_datetime_platform_interface
-  - tz_datetime_web
-  - tz_datetime_web/example
 
 melos:
   # Don't generate intellij files

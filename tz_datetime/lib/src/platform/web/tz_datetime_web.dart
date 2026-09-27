@@ -1,7 +1,8 @@
 import 'dart:js_interop';
 
 import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
-import 'package:tz_datetime_web/native/intl.dart';
+
+import 'intl.dart';
 
 class TzDatetimeWeb extends TzDatetimePlatform {
   @override
