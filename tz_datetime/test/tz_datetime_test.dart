@@ -48,6 +48,18 @@ void main() {
       expect(offset(2100, 7, 'Australia/Sydney'), const Duration(hours: 10));
     });
 
+    test('getOffset with seconds', () {
+      // Paris mean time until 1911, Monrovia mean time until 1972.
+      expect(
+        TzDatetime.getOffset(DateTime.utc(1900), 'Europe/Paris'),
+        const Duration(minutes: 9, seconds: 21),
+      );
+      expect(
+        TzDatetime.getOffset(DateTime.utc(1970), 'Africa/Monrovia'),
+        const Duration(minutes: -44, seconds: -30),
+      );
+    });
+
     test('spring-forward far future', () {
       // 2100-03-28: Paris clocks advance 02:00 → 03:00.
       final datetime = TzDatetime('Europe/Paris', 2100, 3, 28, 2, 30);

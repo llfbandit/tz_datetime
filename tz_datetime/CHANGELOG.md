@@ -5,8 +5,9 @@
 * feat: Merge Android, Linux, Windows and web implementations.
 * fix: Snap spring-forward gap to exact transition.
 * fix: Read TZif data in Dart instead of changing process TZ.
-* fix: Read the newest tzdata copy on Android.
-* fix: List symlinked zone aliases on Linux.
+* fix(Android): Read the newest tzdata copy.
+* fix(linux): List symlinked zone aliases.
+* fix(web): Parse offsets with seconds.
 
 ## 1.1.0
 

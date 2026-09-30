@@ -19,32 +19,17 @@ class TzDatetimeWeb extends TzDatetimePlatform {
 
   @override
   Duration getOffset(DateTime date, String zoneId) {
-    final formatter = _makeFormatter(zoneId);
-
-    final parts = formatter
-        .formatToParts(date.millisecondsSinceEpoch.toJS)
-        .toDart;
-    for (final part in parts) {
-      if (part.type.toDart == 'timeZoneName') {
-        return Duration(milliseconds: _parseOffsetMs(part.value.toDart));
-      }
-    }
-    return Duration.zero;
+    final offsetMs = _offsetMsAt(
+      _makeFormatter(zoneId),
+      date.millisecondsSinceEpoch,
+    );
+    return Duration(milliseconds: offsetMs);
   }
 
   @override
   int localToUtcMicros(int localAsUtcMs, String zoneId, int us) {
     final formatter = _makeFormatter(zoneId);
-
-    int offsetMs(int ms) {
-      final parts = formatter.formatToParts(ms.toJS).toDart;
-      for (final part in parts) {
-        if (part.type.toDart == 'timeZoneName') {
-          return _parseOffsetMs(part.value.toDart);
-        }
-      }
-      return 0;
-    }
+    int offsetMs(int ms) => _offsetMsAt(formatter, ms);
 
     final localOffset = offsetMs(localAsUtcMs);
     final adjustedInstant = localAsUtcMs - localOffset;
@@ -98,19 +83,29 @@ DateTimeFormat _makeFormatter(String zoneId) {
   }
 }
 
-// Parses a longOffset timeZoneName value ("GMT+HH:MM", "GMT-HH:MM", "GMT", "UTC")
-// into milliseconds.
-int _parseOffsetMs(String tzName) {
-  final plusIdx = tzName.indexOf('+');
-  if (plusIdx != -1) return _hhmmToMs(tzName.substring(plusIdx + 1));
-  final minusIdx = tzName.indexOf('-');
-  if (minusIdx != -1) return -_hhmmToMs(tzName.substring(minusIdx + 1));
-  return 0;
+// Offset in ms of the formatter's zone at [utcMs].
+int _offsetMsAt(DateTimeFormat formatter, int utcMs) {
+  for (final part in formatter.formatToParts(utcMs.toJS).toDart) {
+    if (part.type.toDart == 'timeZoneName') {
+      return _parseOffsetMs(part.value.toDart);
+    }
+  }
+  throw TimeZoneInitException('Intl returned no timeZoneName part');
 }
 
-int _hhmmToMs(String hhmm) {
-  final colon = hhmm.indexOf(':');
-  return (int.parse(hhmm.substring(0, colon)) * 60 +
-          int.parse(hhmm.substring(colon + 1))) *
-      60000;
+// Matches the signed H:MM[:SS] part of a longOffset value.
+final _offsetPattern = RegExp(r'([+\-−])(\d{1,2}):(\d{2})(?::(\d{2}))?$');
+
+// Parses a longOffset value such as "GMT", "GMT+05:30" or "GMT-00:44:30".
+int _parseOffsetMs(String value) {
+  if (value == 'GMT' || value == 'UTC') return 0;
+  final match = _offsetPattern.firstMatch(value);
+  if (match == null) {
+    throw TimeZoneInitException('Unexpected Intl offset "$value"');
+  }
+
+  final seconds =
+      (int.parse(match[2]!) * 60 + int.parse(match[3]!)) * 60 +
+      int.parse(match[4] ?? '0');
+  return (match[1] == '+' ? seconds : -seconds) * 1000;
 }
