@@ -5,6 +5,9 @@ import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.da
 import 'intl.dart';
 
 class TzDatetimeWeb extends TzDatetimePlatform {
+  // Caches one formatter per zone, as creating one is costly.
+  final _formatters = <String, DateTimeFormat>{};
+
   @override
   List<String> getAvailableTimezones() {
     final timeZones = intl.supportedValuesOf('timeZone'.toJS).toDart;
@@ -20,7 +23,7 @@ class TzDatetimeWeb extends TzDatetimePlatform {
   @override
   Duration getOffset(DateTime date, String zoneId) {
     final offsetMs = _offsetMsAt(
-      _makeFormatter(zoneId),
+      _formatter(zoneId),
       date.millisecondsSinceEpoch,
     );
     return Duration(milliseconds: offsetMs);
@@ -28,7 +31,7 @@ class TzDatetimeWeb extends TzDatetimePlatform {
 
   @override
   int localToUtcMicros(int localAsUtcMs, String zoneId, int us) {
-    final formatter = _makeFormatter(zoneId);
+    final formatter = _formatter(zoneId);
     int offsetMs(int ms) => _offsetMsAt(formatter, ms);
 
     final localOffset = offsetMs(localAsUtcMs);
@@ -62,6 +65,9 @@ class TzDatetimeWeb extends TzDatetimePlatform {
 
     return Duration(milliseconds: resultMs, microseconds: us).inMicroseconds;
   }
+
+  DateTimeFormat _formatter(String zoneId) =>
+      _formatters[zoneId] ??= _makeFormatter(zoneId);
 }
 
 DateTimeFormat _makeFormatter(String zoneId) {
