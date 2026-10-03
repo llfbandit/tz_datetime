@@ -9,16 +9,10 @@ class TzDatetimeWeb extends TzDatetimePlatform {
   final _formatters = <String, DateTimeFormat>{};
 
   @override
-  List<String> getAvailableTimezones() {
-    final timeZones = intl.supportedValuesOf('timeZone'.toJS).toDart;
-
-    final timeZoneList = <String>[];
-    for (var i = 0; i < timeZones.length; i++) {
-      timeZoneList.add(timeZones[i].toDart);
-    }
-
-    return timeZoneList;
-  }
+  List<String> getAvailableTimezones() => [
+    for (final zone in intl.supportedValuesOf('timeZone'.toJS).toDart)
+      zone.toDart,
+  ];
 
   @override
   Duration getOffset(DateTime date, String zoneId) {
@@ -39,28 +33,22 @@ class TzDatetimeWeb extends TzDatetimePlatform {
     final adjOffset = offsetMs(adjustedInstant);
     var resultMs = localAsUtcMs - adjOffset;
 
-    if (localOffset != adjOffset) {
-      if (adjOffset != offsetMs(resultMs)) {
-        // Spring-forward gap: binary-search for the first post-gap instant.
-        final postGapOffset = localOffset > adjOffset ? localOffset : adjOffset;
-        int lo, hi;
-        if (adjOffset == postGapOffset) {
-          lo = resultMs;
-          hi = adjustedInstant;
+    if (localOffset != adjOffset && adjOffset != offsetMs(resultMs)) {
+      // Spring-forward gap: binary-search seconds for the first post-gap instant.
+      final postGapOffset = localOffset > adjOffset ? localOffset : adjOffset;
+      final loMs = adjOffset == postGapOffset ? resultMs : adjustedInstant;
+      final hiMs = adjOffset == postGapOffset ? adjustedInstant : resultMs;
+      var lo = (loMs - loMs % 1000) ~/ 1000;
+      var hi = (hiMs - hiMs % 1000) ~/ 1000;
+      while (hi - lo > 1) {
+        final mid = lo + (hi - lo) ~/ 2;
+        if (offsetMs(mid * 1000) == postGapOffset) {
+          hi = mid;
         } else {
-          lo = adjustedInstant;
-          hi = resultMs;
+          lo = mid;
         }
-        while (hi - lo > 1) {
-          final mid = lo + (hi - lo) ~/ 2;
-          if (offsetMs(mid) == postGapOffset) {
-            hi = mid;
-          } else {
-            lo = mid;
-          }
-        }
-        resultMs = hi;
       }
+      resultMs = hi * 1000;
     }
 
     return Duration(milliseconds: resultMs, microseconds: us).inMicroseconds;
