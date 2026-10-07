@@ -50,7 +50,7 @@ For more, see the API documentation.
 | iOS      | Native                                                | SDK 8.0+
 | Linux    | Native                                                | '/usr/share/zoneinfo' DB location.
 | macOS    | Native                                                | SDK 10.10+
-| Web      | Native                                                | Browser 2021 (Desktop), 2023 (Mobile)
+| Web      | Native                                                | Chrome 99+, Firefox 93+, Safari 15.4+ (2022)
 | Windows  | Native                                                | Windows 10 1703+ (2017)
 
 On all platforms, the package leverages native system timezone databases for accuracy and efficiency.

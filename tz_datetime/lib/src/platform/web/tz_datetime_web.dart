@@ -9,10 +9,15 @@ class TzDatetimeWeb extends TzDatetimePlatform {
   final _formatters = <String, DateTimeFormat>{};
 
   @override
-  List<String> getAvailableTimezones() => [
-    for (final zone in intl.supportedValuesOf('timeZone'.toJS).toDart)
-      zone.toDart,
-  ];
+  List<String> getAvailableTimezones() {
+    final JSArray<JSString> zones;
+    try {
+      zones = intl.supportedValuesOf('timeZone'.toJS);
+    } catch (_) {
+      throw TimeZoneInitException('Intl.supportedValuesOf is not supported');
+    }
+    return [for (final zone in zones.toDart) zone.toDart];
+  }
 
   @override
   Duration getOffset(DateTime date, String zoneId) {
@@ -56,26 +61,41 @@ class TzDatetimeWeb extends TzDatetimePlatform {
 
   DateTimeFormat _formatter(String zoneId) =>
       _formatters[zoneId] ??= _makeFormatter(zoneId);
+
+  DateTimeFormat _makeFormatter(String zoneId) {
+    try {
+      return _newFormatter(zoneId);
+    } catch (_) {
+      // Intl throws a RangeError for unknown zones and for options it lacks.
+      if (!_intlSupported) {
+        throw TimeZoneInitException('Intl longOffset names are not supported');
+      }
+      throw LocationNotFoundException(zoneId);
+    }
+  }
+
+  // Probes with UTC, which every Intl implementation knows.
+  late final bool _intlSupported = () {
+    try {
+      _newFormatter('UTC');
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }();
 }
 
-DateTimeFormat _makeFormatter(String zoneId) {
-  try {
-    return DateTimeFormat(
-      'en-US'.toJS,
-      {
-            'timeZone'.toJS: zoneId.toJS,
-            'timeZoneName'.toJS: 'longOffset'.toJS,
-            'hour'.toJS: '2-digit'.toJS,
-            'minute'.toJS: '2-digit'.toJS,
-            'hour12'.toJS: false.toJS,
-          }.jsify()!
-          as JSObject,
-    );
-  } catch (_) {
-    // Intl throws a RangeError for unknown zones.
-    throw LocationNotFoundException(zoneId);
-  }
-}
+DateTimeFormat _newFormatter(String zoneId) => DateTimeFormat(
+  'en-US'.toJS,
+  {
+        'timeZone'.toJS: zoneId.toJS,
+        'timeZoneName'.toJS: 'longOffset'.toJS,
+        'hour'.toJS: '2-digit'.toJS,
+        'minute'.toJS: '2-digit'.toJS,
+        'hour12'.toJS: false.toJS,
+      }.jsify()!
+      as JSObject,
+);
 
 // Offset in ms of the formatter's zone at [utcMs].
 int _offsetMsAt(DateTimeFormat formatter, int utcMs) {
