@@ -15,7 +15,6 @@ functions:
     - ucal_close
     - ucal_setMillis
     - ucal_get
-    - ucal_getTimeZoneTransitionDate
     - ucal_getTimeZoneID
     - ucal_openTimeZones
     - uenum_unext

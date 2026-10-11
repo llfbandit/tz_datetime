@@ -109,36 +109,6 @@ class IcuBindings {
         int Function(ffi.Pointer<UCalendar>, int, ffi.Pointer<UErrorCode>)
       >(isLeaf: true);
 
-  int ucal_getTimeZoneTransitionDate(
-    ffi.Pointer<UCalendar> cal,
-    int type,
-    ffi.Pointer<UDate> transition,
-    ffi.Pointer<UErrorCode> status,
-  ) {
-    return _ucal_getTimeZoneTransitionDate(cal, type, transition, status);
-  }
-
-  late final _ucal_getTimeZoneTransitionDatePtr =
-      _lookup<
-        ffi.NativeFunction<
-          UBool Function(
-            ffi.Pointer<UCalendar>,
-            ffi.Int32,
-            ffi.Pointer<UDate>,
-            ffi.Pointer<UErrorCode>,
-          )
-        >
-      >('ucal_getTimeZoneTransitionDate');
-  late final _ucal_getTimeZoneTransitionDate =
-      _ucal_getTimeZoneTransitionDatePtr.asFunction<
-        int Function(
-          ffi.Pointer<UCalendar>,
-          int,
-          ffi.Pointer<UDate>,
-          ffi.Pointer<UErrorCode>,
-        )
-      >(isLeaf: true);
-
   int ucal_getTimeZoneID(
     ffi.Pointer<UCalendar> cal,
     ffi.Pointer<UChar> result,

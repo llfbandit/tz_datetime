@@ -34,27 +34,17 @@ class TzDatetimeDarwin extends TzDatetimePlatform {
     NSDate msToNSDate(int ms) =>
         DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true).toNSDate();
 
-    int offsetMs(int ms) =>
-        nsZone.secondsFromGMTForDate(msToNSDate(ms)) * 1000;
+    int offsetMs(int ms) => nsZone.secondsFromGMTForDate(msToNSDate(ms)) * 1000;
 
     final localOffset = offsetMs(localAsUtcMs);
     final adjustedInstant = localAsUtcMs - localOffset;
     final adjOffset = offsetMs(adjustedInstant);
     var resultMs = localAsUtcMs - adjOffset;
 
-    if (localOffset != adjOffset) {
-      if (adjOffset != offsetMs(resultMs)) {
-        // Spring-forward gap: ask NSTimeZone for the exact transition instant
-        // instead of binary-searching.
-        final postGapOffset = localOffset > adjOffset ? localOffset : adjOffset;
-        final loMs = adjOffset == postGapOffset ? resultMs : adjustedInstant;
-        final transition = nsZone.nextDaylightSavingTimeTransitionAfterDate(
-          msToNSDate(loMs),
-        );
-        if (transition != null) {
-          resultMs = transition.toDateTime().millisecondsSinceEpoch;
-        }
-      }
+    if (localOffset != adjOffset && adjOffset != offsetMs(resultMs)) {
+      // Spring-forward gap: shift forward by the gap, using the pre-gap offset.
+      resultMs =
+          localAsUtcMs - (localOffset < adjOffset ? localOffset : adjOffset);
     }
 
     return Duration(milliseconds: resultMs, microseconds: us).inMicroseconds;

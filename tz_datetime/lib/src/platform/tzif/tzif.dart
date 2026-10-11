@@ -59,21 +59,9 @@ class TzifZone {
     var resultMs = localAsUtcMs - adjOffset;
 
     if (localOffset != adjOffset && adjOffset != offsetMsAt(resultMs)) {
-      // Spring-forward gap: binary-search seconds for the first post-gap instant.
-      final postGapOffset = localOffset > adjOffset ? localOffset : adjOffset;
-      final loMs = adjOffset == postGapOffset ? resultMs : adjustedInstant;
-      final hiMs = adjOffset == postGapOffset ? adjustedInstant : resultMs;
-      var lo = (loMs - loMs % 1000) ~/ 1000;
-      var hi = (hiMs - hiMs % 1000) ~/ 1000;
-      while (hi - lo > 1) {
-        final mid = lo + (hi - lo) ~/ 2;
-        if (offsetMsAt(mid * 1000) == postGapOffset) {
-          hi = mid;
-        } else {
-          lo = mid;
-        }
-      }
-      resultMs = hi * 1000;
+      // Spring-forward gap: shift forward by the gap, using the pre-gap offset.
+      resultMs =
+          localAsUtcMs - (localOffset < adjOffset ? localOffset : adjOffset);
     }
 
     return resultMs * 1000 + us;

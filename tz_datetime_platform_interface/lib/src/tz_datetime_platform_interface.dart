@@ -28,7 +28,7 @@ abstract class TzDatetimePlatform {
   }
 
   /// Converts a wall-clock time to UTC microseconds since epoch for [zoneId],
-  /// handling DST spring-forward gaps natively.
+  /// shifting times in a spring-forward gap forward by the gap length.
   ///
   /// [localAsUtcMs] is `DateTime.utc(year, month, ...).millisecondsSinceEpoch`
   /// (wall-clock components treated as UTC). [us] is the microsecond component.

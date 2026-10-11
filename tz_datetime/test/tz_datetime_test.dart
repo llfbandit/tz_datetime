@@ -63,7 +63,7 @@ void main() {
     test('spring-forward far future', () {
       // 2100-03-28: Paris clocks advance 02:00 → 03:00.
       final datetime = TzDatetime('Europe/Paris', 2100, 3, 28, 2, 30);
-      expect(datetime.toString(), '2100-03-28 03:00:00.000+0200');
+      expect(datetime.toString(), '2100-03-28 03:30:00.000+0200');
     });
 
     test('unknown zone', () {
@@ -521,14 +521,14 @@ void main() {
           expect(datetime.toString(), '2023-03-12 03:00:00.000-0400');
         });
 
-        test('middle of gap snaps to post-gap instant', () {
+        test('middle of gap shifts forward by the gap', () {
           final datetime = TzDatetime(detroit, 2023, 3, 12, 2, 30);
-          expect(datetime.toString(), '2023-03-12 03:00:00.000-0400');
+          expect(datetime.toString(), '2023-03-12 03:30:00.000-0400');
         });
 
-        test('microseconds preserved when snapping gap', () {
+        test('microseconds preserved when shifting gap', () {
           final datetime = TzDatetime(detroit, 2023, 3, 12, 2, 30, 0, 0, 500);
-          expect(datetime.toString(), '2023-03-12 03:00:00.000500-0400');
+          expect(datetime.toString(), '2023-03-12 03:30:00.000500-0400');
         });
 
         test('upper transition', () {
@@ -605,9 +605,9 @@ void main() {
           expect(datetime.toString(), '2023-03-26 03:00:00.000+0200');
         });
 
-        test('middle of gap snaps to post-gap instant', () {
+        test('middle of gap shifts forward by the gap', () {
           final datetime = TzDatetime(berlin, 2023, 3, 26, 2, 30);
-          expect(datetime.toString(), '2023-03-26 03:00:00.000+0200');
+          expect(datetime.toString(), '2023-03-26 03:30:00.000+0200');
         });
 
         test('upper transition', () {
@@ -672,19 +672,19 @@ void main() {
           expect(datetime.toString(), '2023-10-01 01:59:59.999+1030');
         });
 
-        test('start of gap snaps to post-gap instant', () {
+        test('start of gap shifts forward by the gap', () {
           final datetime = TzDatetime(lordHowe, 2023, 10, 1, 2, 0);
           expect(datetime.toString(), '2023-10-01 02:30:00.000+1100');
         });
 
-        test('middle of gap snaps to post-gap instant', () {
+        test('middle of gap shifts forward by the gap', () {
           final datetime = TzDatetime(lordHowe, 2023, 10, 1, 2, 15);
-          expect(datetime.toString(), '2023-10-01 02:30:00.000+1100');
+          expect(datetime.toString(), '2023-10-01 02:45:00.000+1100');
         });
 
-        test('unaligned time in gap snaps to post-gap instant', () {
+        test('unaligned time in gap shifts forward by the gap', () {
           final datetime = TzDatetime(lordHowe, 2023, 10, 1, 2, 17, 13, 123);
-          expect(datetime.toString(), '2023-10-01 02:30:00.000+1100');
+          expect(datetime.toString(), '2023-10-01 02:47:13.123+1100');
         });
 
         test('post-gap instant', () {

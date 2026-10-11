@@ -12,9 +12,6 @@ const _ucalDefault = 0;
 const _fieldZoneOffset = 15;
 const _fieldDstOffset = 16;
 
-// UTimeZoneTransitionType
-const _tzTransitionNext = 0;
-
 // ICU's UCAL_UNKNOWN_ZONE_ID, resolved for unrecognised zone IDs.
 const _unknownZoneId = 'Etc/Unknown';
 
@@ -27,7 +24,6 @@ final _calendars = <String, Pointer<UCalendar>>{};
 // Scratch buffers reused by every call.
 final _status = _coTaskMem<UErrorCode>();
 final _length = _coTaskMem<Int32>();
-final _transition = _coTaskMem<Double>();
 
 Duration getOffset(String zoneId, int utcMs) =>
     Duration(milliseconds: _offsetAt(_calendar(zoneId), utcMs));
@@ -40,20 +36,8 @@ int localToUtcMicros(String zoneId, int localAsUtcMs, int us) {
   var resultMs = localAsUtcMs - adjOffset;
 
   if (localOffset != adjOffset && adjOffset != _offsetAt(cal, resultMs)) {
-    // Spring-forward gap: ask ICU for the transition after the pre-gap instant.
-    final loMs = adjOffset > localOffset ? resultMs : adjustedInstant;
-
-    _status.value = 0;
-    _bindings.ucal_setMillis(cal, loMs.toDouble(), _status);
-    final found = _bindings.ucal_getTimeZoneTransitionDate(
-      cal,
-      _tzTransitionNext,
-      _transition,
-      _status,
-    );
-    _checkStatus('ucal_getTimeZoneTransitionDate');
-
-    if (found != 0) resultMs = _transition.value.round();
+    // Spring-forward gap: shift forward by the gap, using the pre-gap offset.
+    resultMs = localAsUtcMs - min(localOffset, adjOffset);
   }
 
   return resultMs * 1000 + us;
