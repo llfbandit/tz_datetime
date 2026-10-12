@@ -1,0 +1,50 @@
+# Run with `dart run ffigen --config ffi/ffigen_darwin.yaml`.
+
+name: CoreFoundationBindings
+description: Bindings for CoreFoundation (iOS/macOS)
+
+language: c
+output:
+  bindings: '../lib/src/platform/darwin/cf_bindings.dart'
+
+exclude-all-by-default: true
+
+functions:
+  include:
+    - CFAllocatorAllocate
+    - CFAllocatorDeallocate
+    - CFRelease
+    - CFArrayGetCount
+    - CFArrayGetValueAtIndex
+    - CFStringCreateWithCharacters
+    - CFStringGetLength
+    - CFStringGetCharacters
+    - CFTimeZoneCreateWithName
+    - CFTimeZoneCopyKnownNames
+    - CFTimeZoneGetSecondsFromGMT
+  # CoreFoundation never calls back into Dart, so skip the full VM transition,
+  # except where loading zone data may read files and stall GC.
+  leaf:
+    include:
+      - '.*'
+    exclude:
+      - CFTimeZoneCreateWithName
+      - CFTimeZoneCopyKnownNames
+
+structs:
+  include:
+    - CFAllocator
+    - CFString
+    - CFArray
+    - CFTimeZone
+    - CFRange
+
+typedefs:
+  include:
+    - CF.*
+    - Boolean
+    - UniChar
+
+headers:
+  entry-points:
+    - 'cf_minimal.h'

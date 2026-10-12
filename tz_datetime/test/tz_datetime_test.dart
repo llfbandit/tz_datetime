@@ -13,6 +13,13 @@ void main() {
       expect(zones.length, greaterThan(300));
     });
 
+    test('all zones returns a copy', () {
+      final zones = TzDatetime.getAvailableTimezones();
+      final count = zones.length;
+      zones.clear();
+      expect(TzDatetime.getAvailableTimezones(), hasLength(count));
+    });
+
     test('local', () {
       final paris = 'Europe/Paris';
 
@@ -67,14 +74,20 @@ void main() {
     });
 
     test('unknown zone', () {
-      final unknown = 'Europe/Pariss';
       final throwsNotFound = throwsA(isA<LocationNotFoundException>());
 
-      expect(
-        () => TzDatetime.getOffset(DateTime.utc(2023), unknown),
-        throwsNotFound,
-      );
-      expect(() => TzDatetime(unknown, 2023), throwsNotFound);
+      for (final unknown in ['Europe/Pariss', '']) {
+        expect(
+          () => TzDatetime.getOffset(DateTime.utc(2023), unknown),
+          throwsNotFound,
+          reason: unknown,
+        );
+        expect(
+          () => TzDatetime(unknown, 2023),
+          throwsNotFound,
+          reason: unknown,
+        );
+      }
     });
 
     test('copyWith', () {

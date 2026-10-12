@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:tz_datetime_darwin/tz_datetime_darwin.dart';
 import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
 
 import '../platform/android/tz_datetime_android.dart';
+import '../platform/darwin/tz_datetime_darwin.dart';
 import '../platform/linux/tz_datetime_linux.dart';
 import '../platform/windows/tz_datetime_windows.dart';
 import 'register.dart';

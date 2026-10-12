@@ -11,8 +11,6 @@ dev_dependencies:
 workspace:
   - tz_datetime
   - tz_datetime/example
-  - tz_datetime_darwin
-  - tz_datetime_darwin/example
   - tz_datetime_platform_interface
 
 melos:

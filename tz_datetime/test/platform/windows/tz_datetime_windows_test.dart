@@ -19,19 +19,10 @@ void main() {
     );
   });
 
-  test('rejects unknown and empty IDs', () {
-    for (final id in ['Europe/Pariss', 'Etc/Unknown', '']) {
-      expect(
-        () => windows.getOffset(DateTime.utc(2023), id),
-        throwsA(isA<LocationNotFoundException>()),
-        reason: id,
-      );
-    }
-  });
-
-  test('returns a copy of the zone list', () {
-    final count = windows.getAvailableTimezones().length;
-    windows.getAvailableTimezones().clear();
-    expect(windows.getAvailableTimezones(), hasLength(count));
+  test('rejects the placeholder ID', () {
+    expect(
+      () => windows.getOffset(DateTime.utc(2023), 'Etc/Unknown'),
+      throwsA(isA<LocationNotFoundException>()),
+    );
   });
 }
