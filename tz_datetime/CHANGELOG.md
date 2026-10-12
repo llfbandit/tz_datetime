@@ -1,3 +1,15 @@
+## 1.2.0
+
+* feat: Export LocationNotFoundException and TimeZoneInitException.
+* fix: Throw LocationNotFoundException for unknown zones on all platforms.
+* feat: Merge the platform interface and Android, iOS, Linux, macOS, Windows and web implementations: no more dependencies.
+* fix: Shift times in a spring-forward gap forward by the gap.
+* fix: Resolve repeated fall-back times to the earlier instant in every zone.
+* fix: Read TZif data in Dart instead of changing process TZ.
+* fix(Android): Read the newest tzdata copy.
+* fix(linux): List symlinked zone aliases.
+* fix(web): Parse offsets with seconds.
+
 ## 1.1.0
 
 * feat: Remove Flutter dependencies.

@@ -11,7 +11,7 @@ This package serves as an alternative to the [Timezone](https://pub.dev/packages
 - **Fast Startup**: Nothing to load before working with dates & timezones, improving app launch times
 - **Native Integration**: Provides seamless calls to dedicated platform APIs
 - **Complete Data**: No compromise on truncated databases - full timezone information available
-- **Minimal Dependencies**: Only lightweight bindings to platform-specific implementations
+- **No Dependencies**: Pure Dart, calling platform APIs directly through `dart:ffi` and `dart:js_interop`
 
 ## API Compatibility
 
@@ -21,8 +21,6 @@ Tests are adapted from the original package to ensure reliability and compatibil
 
 ## Usage
 
-Basic usage example:
-
 ```dart
 import 'package:tz_datetime/tz_datetime.dart';
 
@@ -30,7 +28,7 @@ void main() {
   final la = 'America/Los_Angeles';
   final ny = 'America/New_York';
 
-  // Retrieve all available zones form platform
+  // Retrieve all available zones from platform
   final zones = TzDatetime.getAvailableTimezones();  // [Africa/Abidjan, Europe/Athens, ...]
   
   // Get offset from any date with Daylight Saving Times
@@ -50,9 +48,9 @@ For more, see the API documentation.
 |----------|-------------------------------------------------------|-------
 | Android  | Native                                                | SDK 21.0+
 | iOS      | Native                                                | SDK 8.0+
-| Linux    | Native                                                | '/usr/share/zoneinfo' DB location.
+| Linux    | Native                                                | tzdata in `$TZDIR`, `/usr/share/zoneinfo` or `/etc/zoneinfo`
 | macOS    | Native                                                | SDK 10.10+
-| Web      | Native                                                | Browser 2021 (Desktop), 2023 (Mobile)
+| Web      | Native                                                | Chrome 99+, Firefox 93+, Safari 15.4+ (2022)
 | Windows  | Native                                                | Windows 10 1703+ (2017)
 
 On all platforms, the package leverages native system timezone databases for accuracy and efficiency.

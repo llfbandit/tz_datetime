@@ -1,6 +1,6 @@
-import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
-import 'package:tz_datetime_web/tz_datetime_web.dart';
+import '../platform/tz_datetime_platform.dart';
 
+import '../platform/web/tz_datetime_web.dart';
 import 'register.dart';
 
 void register() {
