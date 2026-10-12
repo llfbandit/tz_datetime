@@ -10,7 +10,7 @@ dev_dependencies:
 
 workspace:
   - tz_datetime
-  - tz_datetime/example
+  - integration_app
 
 melos:
   # Don't generate intellij files

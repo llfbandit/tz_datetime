@@ -1,6 +1,6 @@
-name: tz_datetime_example
-description: "Demonstrates how to use the tz_datetime plugin."
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+name: tz_datetime_integration
+description: "Runs the tz_datetime test suite on Android and iOS devices."
+publish_to: none
 
 resolution: workspace
 
