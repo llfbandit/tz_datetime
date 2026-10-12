@@ -8,13 +8,16 @@ void main() {
   final zones = TzDatetime.getAvailableTimezones();
   print(zones); // [Africa/Abidjan, Europe/Athens, ...]
 
+  final laTime = TzDatetime(la, 2026, 2, 9, 3, 17, 3, 964, 38);
+  print(laTime); // 2026-02-09 03:17:03.964038-0800
+
   // Get offset from any date with Daylight Saving Times
-  final offset = TzDatetime.getOffset(DateTime.now(), la);
+  final offset = TzDatetime.getOffset(laTime, la);
   print(offset); // -8:00:00.000000
 
-  final laTime = TzDatetime.now(la);
-  print(laTime); // 2026-02-09T03:17:03.964038-0800
-
   final nyTime = TzDatetime.from(laTime, ny);
-  print(nyTime); // 2026-02-09T06:17:03.964038-0500
+  print(nyTime); // 2026-02-09 06:17:03.964038-0500
+
+  // Current date time in `la` zone
+  print(TzDatetime.now(la));
 }
