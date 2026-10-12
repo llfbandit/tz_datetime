@@ -51,22 +51,6 @@ class TzifZone {
     return _offsets[lo] * 1000;
   }
 
-  /// Converts wall-clock [localAsUtcMs] to UTC microseconds.
-  int localToUtcMicros(int localAsUtcMs, int us) {
-    final localOffset = offsetMsAt(localAsUtcMs);
-    final adjustedInstant = localAsUtcMs - localOffset;
-    final adjOffset = offsetMsAt(adjustedInstant);
-    var resultMs = localAsUtcMs - adjOffset;
-
-    if (localOffset != adjOffset && adjOffset != offsetMsAt(resultMs)) {
-      // Spring-forward gap: shift forward by the gap, using the pre-gap offset.
-      resultMs =
-          localAsUtcMs - (localOffset < adjOffset ? localOffset : adjOffset);
-    }
-
-    return resultMs * 1000 + us;
-  }
-
   static TzifZone? _parse(ByteData data) {
     if (!_hasMagic(data, 0)) return null;
 

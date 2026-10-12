@@ -28,21 +28,6 @@ final _length = _coTaskMem<Int32>();
 Duration getOffset(String zoneId, int utcMs) =>
     Duration(milliseconds: _offsetAt(_calendar(zoneId), utcMs));
 
-int localToUtcMicros(String zoneId, int localAsUtcMs, int us) {
-  final cal = _calendar(zoneId);
-  final localOffset = _offsetAt(cal, localAsUtcMs);
-  final adjustedInstant = localAsUtcMs - localOffset;
-  final adjOffset = _offsetAt(cal, adjustedInstant);
-  var resultMs = localAsUtcMs - adjOffset;
-
-  if (localOffset != adjOffset && adjOffset != _offsetAt(cal, resultMs)) {
-    // Spring-forward gap: shift forward by the gap, using the pre-gap offset.
-    resultMs = localAsUtcMs - min(localOffset, adjOffset);
-  }
-
-  return resultMs * 1000 + us;
-}
-
 List<String> getAvailableTimezones() {
   _status.value = 0;
   final en = _bindings.ucal_openTimeZones(_status);

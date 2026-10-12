@@ -563,6 +563,11 @@ void main() {
           expect(datetime.toString(), '2023-11-05 01:00:00.000-0400');
         });
 
+        test('middle of overlap resolves to the earlier instant', () {
+          final datetime = TzDatetime(detroit, 2023, 11, 5, 1, 30);
+          expect(datetime.toString(), '2023-11-05 01:30:00.000-0400');
+        });
+
         test('upper transition', () {
           final datetime = TzDatetime(detroit, 2023, 11, 5, 2);
           expect(datetime.toString(), '2023-11-05 02:00:00.000-0500');
@@ -639,7 +644,12 @@ void main() {
 
         test('lower transition', () {
           final datetime = TzDatetime(berlin, 2023, 10, 29, 2);
-          expect(datetime.toString(), '2023-10-29 02:00:00.000+0100');
+          expect(datetime.toString(), '2023-10-29 02:00:00.000+0200');
+        });
+
+        test('middle of overlap resolves to the earlier instant', () {
+          final datetime = TzDatetime(berlin, 2023, 10, 29, 2, 30);
+          expect(datetime.toString(), '2023-10-29 02:30:00.000+0200');
         });
 
         test('upper transition', () {
@@ -707,9 +717,9 @@ void main() {
           expect(datetime.toString(), '2023-04-02 01:15:00.000+1100');
         });
 
-        test('start of overlap resolves to standard time', () {
+        test('start of overlap resolves to the earlier instant', () {
           final datetime = TzDatetime(lordHowe, 2023, 4, 2, 1, 30);
-          expect(datetime.toString(), '2023-04-02 01:30:00.000+1030');
+          expect(datetime.toString(), '2023-04-02 01:30:00.000+1100');
         });
 
         test('post fall-back', () {

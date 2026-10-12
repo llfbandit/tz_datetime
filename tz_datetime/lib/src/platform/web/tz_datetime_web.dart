@@ -28,25 +28,6 @@ class TzDatetimeWeb extends TzDatetimePlatform {
     return Duration(milliseconds: offsetMs);
   }
 
-  @override
-  int localToUtcMicros(int localAsUtcMs, String zoneId, int us) {
-    final formatter = _formatter(zoneId);
-    int offsetMs(int ms) => _offsetMsAt(formatter, ms);
-
-    final localOffset = offsetMs(localAsUtcMs);
-    final adjustedInstant = localAsUtcMs - localOffset;
-    final adjOffset = offsetMs(adjustedInstant);
-    var resultMs = localAsUtcMs - adjOffset;
-
-    if (localOffset != adjOffset && adjOffset != offsetMs(resultMs)) {
-      // Spring-forward gap: shift forward by the gap, using the pre-gap offset.
-      resultMs =
-          localAsUtcMs - (localOffset < adjOffset ? localOffset : adjOffset);
-    }
-
-    return Duration(milliseconds: resultMs, microseconds: us).inMicroseconds;
-  }
-
   DateTimeFormat _formatter(String zoneId) =>
       _formatters[zoneId] ??= _makeFormatter(zoneId);
 

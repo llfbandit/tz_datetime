@@ -18,11 +18,6 @@ abstract class TzifPlatform extends TzDatetimePlatform {
     return Duration(milliseconds: offsetMs);
   }
 
-  @override
-  int localToUtcMicros(int localAsUtcMs, String zoneId, int us) {
-    return _zone(zoneId).localToUtcMicros(localAsUtcMs, us);
-  }
-
   TzifZone _zone(String zoneId) => _zones[zoneId] ??= _load(zoneId);
 
   TzifZone _load(String zoneId) {
