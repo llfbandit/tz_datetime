@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
+import '../../exceptions.dart';
 
 // Known copies; bionic's lookup order varies across API levels.
 const _paths = [

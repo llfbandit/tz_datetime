@@ -1,7 +1,7 @@
 import 'dart:ffi';
 import 'dart:math';
 
-import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
+import '../../exceptions.dart';
 
 import 'icu_bindings.dart';
 

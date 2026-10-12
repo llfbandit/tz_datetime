@@ -1,6 +1,6 @@
 import 'dart:ffi';
 
-import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
+import '../../exceptions.dart';
 
 import 'cf_bindings.dart';
 

@@ -2,7 +2,7 @@
 
 * feat: Export LocationNotFoundException and TimeZoneInitException.
 * fix: Throw LocationNotFoundException for unknown zones on all platforms.
-* feat: Merge Android, iOS, Linux, macOS, Windows and web implementations.
+* feat: Merge the platform interface and Android, iOS, Linux, macOS, Windows and web implementations: no more dependencies.
 * fix: Shift times in a spring-forward gap forward by the gap.
 * fix: Resolve repeated fall-back times to the earlier instant in every zone.
 * fix: Read TZif data in Dart instead of changing process TZ.

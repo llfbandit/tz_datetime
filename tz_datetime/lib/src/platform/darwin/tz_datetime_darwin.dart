@@ -1,4 +1,4 @@
-import 'package:tz_datetime_platform_interface/tz_datetime_platform_interface.dart';
+import '../tz_datetime_platform.dart';
 
 import 'cf.dart' as cf;
 
