@@ -200,6 +200,20 @@ void main() {
       final t = TzDatetime.parse('2010-01-02T03:04:05.006007', la);
       expect(t.toString(), equals('2010-01-02 03:04:05.006007-0800'));
     });
+
+    test('parse offset with seconds', () {
+      final t = TzDatetime.parse('1905-07-17T00:00:00+00:09:21', 'UTC');
+      expect(t.toString(), equals('1905-07-16 23:50:39.000Z'));
+      final u = TzDatetime.parse('1905-07-17 00:00:00-000921', 'UTC');
+      expect(u.toString(), equals('1905-07-17 00:09:21.000Z'));
+    });
+
+    test('toString round-trips offset with seconds', () {
+      final paris = 'Europe/Paris';
+      final t = TzDatetime(paris, 1905, 7, 17);
+      expect(t.toString(), equals('1905-07-17 00:00:00.000+000921'));
+      expect(TzDatetime.parse(t.toString(), paris), equals(t));
+    });
   });
 
   group('Properties', () {

@@ -24,8 +24,24 @@ class TzDatetime implements DateTime {
   /// The function parses a subset of ISO 8601
   /// which includes the subset accepted by RFC 3339.
   ///
+  /// Offsets with seconds, such as `+00:09:21` or `+000921`, are also accepted.
+  ///
   /// The result is always in the time zone of the provided [zoneId].
   static TzDatetime parse(String isoDate, String zoneId) {
+    final match = _offsetWithSeconds.firstMatch(isoDate);
+    if (match != null) {
+      final offset = Duration(
+        hours: int.parse(match[3]!),
+        minutes: int.parse(match[5]!),
+        seconds: int.parse(match[6]!),
+      );
+      final dt = DateTime.parse('${match[1]}Z');
+      return TzDatetime.from(
+        match[2] == '-' ? dt.add(offset) : dt.subtract(offset),
+        zoneId,
+      );
+    }
+
     final dt = DateTime.parse(isoDate);
 
     if (dt.isUtc) {
@@ -220,7 +236,7 @@ class TzDatetime implements DateTime {
   /// Returns an ISO-8601 full-precision extended format representation.
   ///
   /// The format is yyyy-MM-ddTHH:mm:ss.mmmuuuZ for UTC time, and
-  /// yyyy-MM-ddTHH:mm:ss.mmmuuu±hhmm for local/non-UTC time.
+  /// yyyy-MM-ddTHH:mm:ss.mmmuuu±hhmm[ss] for local/non-UTC time.
   @override
   String toIso8601String() => _toString(iso8601: true);
 
@@ -374,10 +390,16 @@ class TzDatetime implements DateTime {
       final offsetSeconds = _offset.abs().inSeconds;
       final offH = twoDigits(offsetSeconds ~/ 3600);
       final offM = twoDigits((offsetSeconds % 3600) ~/ 60);
+      final offS = offsetSeconds % 60 == 0 ? '' : twoDigits(offsetSeconds % 60);
 
-      return '$y-$m-$d$sep$h:$min:$sec.$ms$us$offSign$offH$offM';
+      return '$y-$m-$d$sep$h:$min:$sec.$ms$us$offSign$offH$offM$offS';
     }
   }
+
+  /// Matches a trailing ±hhmmss or ±hh:mm:ss offset, which [DateTime] rejects.
+  static final _offsetWithSeconds = RegExp(
+    r'^(.+[T ].*\d) ?([+-])(\d\d)(:?)(\d\d)\4(\d\d)$',
+  );
 
   /// Returns the native [DateTime] object.
   static DateTime _toNative(DateTime t) => t is TzDatetime ? t._utcDatetime : t;

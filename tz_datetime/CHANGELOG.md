@@ -1,3 +1,7 @@
+## 1.2.1
+
+* fix: Parse and print UTC offsets with seconds for historical dates.
+
 ## 1.2.0
 
 * feat: Export LocationNotFoundException and TimeZoneInitException.
