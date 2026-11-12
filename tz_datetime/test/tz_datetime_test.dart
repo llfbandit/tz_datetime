@@ -496,6 +496,15 @@ void main() {
       expect(u.toIso8601String(), equals('2010-01-02T03:04:05.006007Z'));
     });
 
+    test('year formatting matches DateTime outside 0..9999', () {
+      for (final y in [-123456, -10000, -9999, -1, 0, 9999, 10000, 123456]) {
+        final t = TzDatetime.utc(y);
+        final d = DateTime.utc(y);
+        expect(t.toIso8601String(), equals(d.toIso8601String()), reason: '$y');
+        expect(t.toString(), equals(d.toString()), reason: '$y');
+      }
+    });
+
     // fourDigits() year-padding branches (lines not reached by 4-digit years)
     test('toString pads 3-digit year', () {
       expect(TzDatetime.utc(500).toString(), startsWith('0500-'));

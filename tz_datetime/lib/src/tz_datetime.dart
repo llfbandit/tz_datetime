@@ -264,6 +264,7 @@ class TzDatetime implements DateTime {
   ///
   /// The format is yyyy-MM-ddTHH:mm:ss.mmmuuuZ for UTC time, and
   /// yyyy-MM-ddTHH:mm:ss.mmmuuu±hhmm[ss] for local/non-UTC time.
+  /// Years outside -9999..9999 are printed as ±yyyyyy.
   @override
   String toIso8601String() => _toString(iso8601: true);
 
@@ -399,7 +400,17 @@ class TzDatetime implements DateTime {
       return '0$n';
     }
 
-    final y = fourDigits(year);
+    String sixDigits(int n) {
+      final absN = n.abs();
+      final sign = n < 0 ? '-' : '+';
+      if (absN >= 100000) return '$sign$absN';
+      return '${sign}0$absN';
+    }
+
+    // Like DateTime, only ISO-8601 uses the expanded ±yyyyyy year.
+    final y = iso8601 && (year < -9999 || year > 9999)
+        ? sixDigits(year)
+        : fourDigits(year);
     final m = twoDigits(month);
     final d = twoDigits(day);
     final sep = iso8601 ? 'T' : ' ';
