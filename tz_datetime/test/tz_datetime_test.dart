@@ -201,11 +201,86 @@ void main() {
       expect(t.toString(), equals('2010-01-02 03:04:05.006007-0800'));
     });
 
+    test('parse non-UTC string ignores host DST gaps', () {
+      // Find a wall-clock time the host zone skips, which UTC keeps.
+      DateTime? gap;
+      for (var m = 0; gap == null && m < 366 * 24 * 60; m += 15) {
+        final wall = DateTime.utc(2021, 1, 1, 0, m);
+        final host = DateTime(
+          wall.year,
+          wall.month,
+          wall.day,
+          wall.hour,
+          wall.minute,
+        );
+        if (host.hour != wall.hour || host.minute != wall.minute) gap = wall;
+      }
+      if (gap == null) {
+        markTestSkipped('host zone has no DST gap in 2021');
+        return;
+      }
+
+      final date = gap.toIso8601String().substring(0, 10);
+      final time = gap.toIso8601String().substring(11, 16);
+      final t = TzDatetime.parse('${date}T$time:00', utc);
+      expect(t.toString(), equals('$date $time:00.000Z'));
+      if (gap.hour == 0 && gap.minute == 0) {
+        final d = TzDatetime.parse(date, utc);
+        expect(d.toString(), equals('$date 00:00:00.000Z'));
+      }
+    });
+
+    test('parse string with offset uses from()', () {
+      const utc = '2010-01-01 22:04:05.000-0500';
+      for (final s in [
+        '2010-01-02T03:04:05z',
+        '2010-01-02 03:04:05 Z',
+        '2010-01-02T04:04:05+01',
+        '2010-01-02T04:04:05+01:00',
+        '2010-01-01T21:04:05-0600',
+      ]) {
+        expect(TzDatetime.parse(s, newYork).toString(), equals(utc), reason: s);
+      }
+    });
+
     test('parse offset with seconds', () {
       final t = TzDatetime.parse('1905-07-17T00:00:00+00:09:21', 'UTC');
       expect(t.toString(), equals('1905-07-16 23:50:39.000Z'));
       final u = TzDatetime.parse('1905-07-17 00:00:00-000921', 'UTC');
       expect(u.toString(), equals('1905-07-17 00:09:21.000Z'));
+    });
+
+    test('parse reports the original input on failure', () {
+      for (final s in [
+        '2021-02-3x',
+        '2021-02-03T25:xx',
+        '2021-03-28T02:30:00 ',
+        '2021-02-3xT00:00:00+00:09:21',
+        '+275760-09-13T00:30:00',
+        '+275760-09-13T00:00:00-00:09:21',
+      ]) {
+        expect(
+          () => TzDatetime.parse(s, newYork),
+          throwsA(isA<FormatException>().having((e) => e.source, 'source', s)),
+          reason: s,
+        );
+      }
+    });
+
+    test('parse rejects instants outside the DateTime range', () {
+      // Paris was UTC+0:09:21 then, so this is just before the earliest instant.
+      const s = '-271821-04-20T00:00:00';
+      expect(
+        () => TzDatetime.parse(s, 'Europe/Paris'),
+        throwsA(isA<FormatException>().having((e) => e.source, 'source', s)),
+      );
+    });
+
+    test('accepts wall-clock times at the ends of the DateTime range', () {
+      final min = TzDatetime.parse('-271821-04-20T00:00:00', 'UTC');
+      expect(min.toString(), equals('-271821-04-20 00:00:00.000Z'));
+      final max = TzDatetime.utc(275760, 9, 13);
+      expect(max.toString(), equals('275760-09-13 00:00:00.000Z'));
     });
 
     test('toString round-trips offset with seconds', () {

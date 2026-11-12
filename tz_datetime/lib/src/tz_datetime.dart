@@ -28,6 +28,24 @@ class TzDatetime implements DateTime {
   ///
   /// The result is always in the time zone of the provided [zoneId].
   static TzDatetime parse(String isoDate, String zoneId) {
+    try {
+      return _parse(isoDate, zoneId);
+    } on FormatException catch (e, st) {
+      Error.throwWithStackTrace(FormatException(e.message, isoDate), st);
+    }
+  }
+
+  /// Runs [build], reporting a DateTime range error as a [FormatException].
+  static T _inRange<T>(T Function() build) {
+    try {
+      return build();
+    } on ArgumentError {
+      // Valid fields can still name an instant outside the DateTime range.
+      throw const FormatException('Time out of range');
+    }
+  }
+
+  static TzDatetime _parse(String isoDate, String zoneId) {
     final match = _offsetWithSeconds.firstMatch(isoDate);
     if (match != null) {
       final offset = Duration(
@@ -36,28 +54,34 @@ class TzDatetime implements DateTime {
         seconds: int.parse(match[6]!),
       );
       final dt = DateTime.parse('${match[1]}Z');
-      return TzDatetime.from(
-        match[2] == '-' ? dt.add(offset) : dt.subtract(offset),
-        zoneId,
+      return _inRange(
+        () => TzDatetime.from(
+          match[2] == '-' ? dt.add(offset) : dt.subtract(offset),
+          zoneId,
+        ),
       );
     }
 
-    final dt = DateTime.parse(isoDate);
-
-    if (dt.isUtc) {
-      return TzDatetime.from(dt, zoneId);
+    if (_zoneDesignator.hasMatch(isoDate)) {
+      final dt = DateTime.parse(isoDate);
+      return _inRange(() => TzDatetime.from(dt, zoneId));
     }
 
-    return TzDatetime(
-      zoneId,
-      dt.year,
-      dt.month,
-      dt.day,
-      dt.hour,
-      dt.minute,
-      dt.second,
-      dt.millisecond,
-      dt.microsecond,
+    // A trailing space is invalid but becomes valid before an added 'Z'.
+    if (isoDate.endsWith(' ')) {
+      throw const FormatException('Invalid date format');
+    }
+    // Parse wall-clock fields as UTC so the host zone can't shift or reject them.
+    final dt = DateTime.parse(
+      isoDate.contains(_dateTimeSeparator) ? '${isoDate}Z' : '${isoDate}T00Z',
+    );
+
+    final us = _localToUtcMicros(dt, zoneId);
+    return _inRange(
+      () => TzDatetime.from(
+        DateTime.fromMicrosecondsSinceEpoch(us, isUtc: true),
+        zoneId,
+      ),
     );
   }
 
@@ -81,18 +105,21 @@ class TzDatetime implements DateTime {
     int millisecond = 0,
     int microsecond = 0,
   ]) : this.from(
-         _utcFromLocalDateTime(
-           DateTime.utc(
-             year,
-             month,
-             day,
-             hour,
-             minute,
-             second,
-             millisecond,
-             microsecond,
+         DateTime.fromMicrosecondsSinceEpoch(
+           _localToUtcMicros(
+             DateTime.utc(
+               year,
+               month,
+               day,
+               hour,
+               minute,
+               second,
+               millisecond,
+               microsecond,
+             ),
+             zoneId,
            ),
-           zoneId,
+           isUtc: true,
          ),
          zoneId,
        );
@@ -401,19 +428,22 @@ class TzDatetime implements DateTime {
     r'^(.+[T ].*\d) ?([+-])(\d\d)(:?)(\d\d)\4(\d\d)$',
   );
 
+  static final _dateTimeSeparator = RegExp('[T ]');
+
+  /// Matches a 'Z' or ±offset after the time; the time itself has neither.
+  static final _zoneDesignator = RegExp('[T ].*[zZ+-]');
+
   /// Returns the native [DateTime] object.
   static DateTime _toNative(DateTime t) => t is TzDatetime ? t._utcDatetime : t;
 
   /// Converts a [_localDateTime] into a correct [DateTime].
-  static DateTime _utcFromLocalDateTime(DateTime local, String zoneId) {
+  static int _localToUtcMicros(DateTime local, String zoneId) {
     register();
 
-    final us = TzDatetimePlatform.instance.localToUtcMicros(
+    return TzDatetimePlatform.instance.localToUtcMicros(
       local.millisecondsSinceEpoch,
       zoneId,
       local.microsecond,
     );
-
-    return DateTime.fromMicrosecondsSinceEpoch(us, isUtc: true);
   }
 }

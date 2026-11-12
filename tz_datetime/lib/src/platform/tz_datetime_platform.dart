@@ -37,7 +37,11 @@ abstract class TzDatetimePlatform {
   /// (wall-clock components treated as UTC). [us] is the microsecond component.
   int localToUtcMicros(int localAsUtcMs, String zoneId, int us) {
     int offsetMs(int utcMs) => getOffset(
-      DateTime.fromMillisecondsSinceEpoch(utcMs, isUtc: true),
+      // Clamp into the DateTime range; no zone has transitions there.
+      DateTime.fromMillisecondsSinceEpoch(
+        utcMs.clamp(-_maxMs, _maxMs),
+        isUtc: true,
+      ),
       zoneId,
     ).inMilliseconds;
 
@@ -54,6 +58,9 @@ abstract class TzDatetimePlatform {
     }
     return resultMs * 1000 + us;
   }
+
+  /// Largest millisecondsSinceEpoch a [DateTime] accepts.
+  static const _maxMs = 8640000000000000;
 }
 
 class _TzDatetimePlatformStub extends TzDatetimePlatform {}

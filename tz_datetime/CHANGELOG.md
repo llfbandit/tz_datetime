@@ -1,6 +1,7 @@
 ## 1.2.1
 
 * fix: Parse and print UTC offsets with seconds for historical dates.
+* fix: Parse offset-less strings independently of the host time zone.
 
 ## 1.2.0
 
