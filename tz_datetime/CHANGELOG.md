@@ -5,6 +5,7 @@
 * fix: Compare microseconds when checking equality with a DateTime.
 * fix: Print expanded years in toIso8601String like DateTime.
 * perf(web): Cache the list of available time zones.
+* perf: Reuse the resolved offset when constructing from wall-clock time.
 
 ## 1.2.0
 

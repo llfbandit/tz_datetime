@@ -76,13 +76,8 @@ class TzDatetime implements DateTime {
       isoDate.contains(_dateTimeSeparator) ? '${isoDate}Z' : '${isoDate}T00Z',
     );
 
-    final us = _localToUtcMicros(dt, zoneId);
-    return _inRange(
-      () => TzDatetime.from(
-        DateTime.fromMicrosecondsSinceEpoch(us, isUtc: true),
-        zoneId,
-      ),
-    );
+    final resolved = _resolveLocal(dt, zoneId);
+    return _inRange(() => TzDatetime._wallClock(zoneId, resolved));
   }
 
   /// Constructs a [TzDatetime] instance specified at [zoneId].
@@ -104,24 +99,21 @@ class TzDatetime implements DateTime {
     int second = 0,
     int millisecond = 0,
     int microsecond = 0,
-  ]) : this.from(
-         DateTime.fromMicrosecondsSinceEpoch(
-           _localToUtcMicros(
-             DateTime.utc(
-               year,
-               month,
-               day,
-               hour,
-               minute,
-               second,
-               millisecond,
-               microsecond,
-             ),
-             zoneId,
-           ),
-           isUtc: true,
-         ),
+  ]) : this._wallClock(
          zoneId,
+         _resolveLocal(
+           DateTime.utc(
+             year,
+             month,
+             day,
+             hour,
+             minute,
+             second,
+             millisecond,
+             microsecond,
+           ),
+           zoneId,
+         ),
        );
 
   /// Constructs a [TzDatetime] instance specified in the UTC time zone.
@@ -215,6 +207,13 @@ class TzDatetime implements DateTime {
 
   TzDatetime.from(DateTime other, String zoneId)
     : this._(_toNative(other).toUtc(), zoneId, getOffset(other, zoneId));
+
+  TzDatetime._wallClock(String zoneId, ({int utcUs, Duration offset}) resolved)
+    : this._(
+        DateTime.fromMicrosecondsSinceEpoch(resolved.utcUs, isUtc: true),
+        zoneId,
+        resolved.offset,
+      );
 
   TzDatetime._(this._utcDatetime, this._zoneId, this._offset)
     : _localDatetime = _utcDatetime.add(_offset);
@@ -446,14 +445,18 @@ class TzDatetime implements DateTime {
   /// Returns the native [DateTime] object.
   static DateTime _toNative(DateTime t) => t is TzDatetime ? t._utcDatetime : t;
 
-  /// Converts a [_localDateTime] into a correct [DateTime].
-  static int _localToUtcMicros(DateTime local, String zoneId) {
+  /// Resolves wall-clock [local] in [zoneId] to a UTC instant and its offset.
+  static ({int utcUs, Duration offset}) _resolveLocal(
+    DateTime local,
+    String zoneId,
+  ) {
     register();
 
-    return TzDatetimePlatform.instance.localToUtcMicros(
+    final (:utcMs, :offset) = TzDatetimePlatform.instance.localToUtc(
       local.millisecondsSinceEpoch,
       zoneId,
-      local.microsecond,
     );
+
+    return (utcUs: utcMs * 1000 + local.microsecond, offset: offset);
   }
 }
