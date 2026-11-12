@@ -4,6 +4,7 @@
 * fix: Parse offset-less strings independently of the host time zone.
 * fix: Compare microseconds when checking equality with a DateTime.
 * fix: Print expanded years in toIso8601String like DateTime.
+* perf(web): Cache the list of available time zones.
 
 ## 1.2.0
 

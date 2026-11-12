@@ -33,6 +33,13 @@ void main() {
     );
   });
 
+  test('caches the zone list', () {
+    final platform = TzDatetimeWeb();
+    final zones = platform.getAvailableTimezones();
+    removeIntl('supportedValuesOf');
+    expect(platform.getAvailableTimezones(), equals(zones));
+  });
+
   test('reports missing Intl.supportedValuesOf support', () {
     removeIntl('supportedValuesOf');
     expect(

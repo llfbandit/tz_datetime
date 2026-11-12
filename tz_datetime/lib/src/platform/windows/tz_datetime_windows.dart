@@ -3,10 +3,8 @@ import '../tz_datetime_platform.dart';
 import 'icu.dart' as icu;
 
 class TzDatetimeWindows extends TzDatetimePlatform {
-  late final _zoneIds = icu.getAvailableTimezones();
-
   @override
-  List<String> getAvailableTimezones() => List.of(_zoneIds);
+  List<String> listTimezones() => icu.getAvailableTimezones();
 
   @override
   Duration getOffset(DateTime date, String zoneId) {

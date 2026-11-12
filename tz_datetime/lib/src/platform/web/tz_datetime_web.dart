@@ -10,7 +10,7 @@ class TzDatetimeWeb extends TzDatetimePlatform {
   final _formatters = <String, DateTimeFormat>{};
 
   @override
-  List<String> getAvailableTimezones() {
+  List<String> listTimezones() {
     final JSArray<JSString> zones;
     try {
       zones = intl.supportedValuesOf('timeZone'.toJS);

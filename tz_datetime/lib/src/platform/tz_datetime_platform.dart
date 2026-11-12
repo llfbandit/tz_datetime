@@ -17,10 +17,14 @@ abstract class TzDatetimePlatform {
     _instance = instance;
   }
 
-  List<String> getAvailableTimezones() {
-    throw UnimplementedError(
-      'getAvailableTimezones() has not been implemented.',
-    );
+  late final List<String> _zoneIds = listTimezones();
+
+  /// Returns a copy of the zone list, which is read once per instance.
+  List<String> getAvailableTimezones() => List.of(_zoneIds);
+
+  /// Reads the zone IDs; [getAvailableTimezones] caches the result.
+  List<String> listTimezones() {
+    throw UnimplementedError('listTimezones() has not been implemented.');
   }
 
   Duration getOffset(DateTime date, String zoneId) {
