@@ -2,6 +2,7 @@
 
 * fix: Parse and print UTC offsets with seconds for historical dates.
 * fix: Parse offset-less strings independently of the host time zone.
+* fix: Compare microseconds when checking equality with a DateTime.
 
 ## 1.2.0
 

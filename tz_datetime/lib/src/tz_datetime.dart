@@ -363,8 +363,7 @@ class TzDatetime implements DateTime {
           _zoneId == other._zoneId;
     }
     if (other is DateTime) {
-      return millisecondsSinceEpoch == other.millisecondsSinceEpoch &&
-          isUtc == other.isUtc;
+      return _utcDatetime.isAtSameMomentAs(other) && isUtc == other.isUtc;
     }
     return false;
   }

@@ -435,6 +435,19 @@ void main() {
       expect(tUtc == dUtc, isTrue);
     });
 
+    test('UTC TzDatetime == UTC DateTime compares microseconds', () {
+      final t = TzDatetime.utc(2020, 1, 1, 0, 0, 0, 0, 1);
+      final d = DateTime.utc(2020);
+      expect(t == d, isFalse);
+      expect(d == t, isFalse);
+      expect(t == DateTime.utc(2020, 1, 1, 0, 0, 0, 0, 1), isTrue);
+
+      // Past 2^53 µs, where web microsecondsSinceEpoch is inexact.
+      final far = TzDatetime.from(DateTime.utc(3000, 1, 1, 0, 0, 0, 0, 1), utc);
+      expect(far == DateTime.utc(3000), isFalse);
+      expect(far == DateTime.utc(3000, 1, 1, 0, 0, 0, 0, 1), isTrue);
+    });
+
     test('non-UTC TzDatetime == UTC DateTime is false despite same instant', () {
       // t1 (LA) and dtUtc have the same millisecondsSinceEpoch but different isUtc
       final dtUtc = DateTime.utc(2010, 1, 2, 11);
