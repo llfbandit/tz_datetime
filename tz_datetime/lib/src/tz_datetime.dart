@@ -208,9 +208,15 @@ class TzDatetime implements DateTime {
   TzDatetime.from(DateTime other, String zoneId)
     : this._(_toNative(other).toUtc(), zoneId, getOffset(other, zoneId));
 
-  TzDatetime._wallClock(String zoneId, ({int utcUs, Duration offset}) resolved)
-    : this._(
-        DateTime.fromMicrosecondsSinceEpoch(resolved.utcUs, isUtc: true),
+  TzDatetime._wallClock(
+    String zoneId,
+    ({int utcMs, int microsecond, Duration offset}) resolved,
+  ) : this._(
+        // Keep ms and µs apart like DateTime; ms * 1000 + µs rounds on the web.
+        DateTime.fromMillisecondsSinceEpoch(
+          resolved.utcMs,
+          isUtc: true,
+        ).add(Duration(microseconds: resolved.microsecond)),
         zoneId,
         resolved.offset,
       );
@@ -446,7 +452,7 @@ class TzDatetime implements DateTime {
   static DateTime _toNative(DateTime t) => t is TzDatetime ? t._utcDatetime : t;
 
   /// Resolves wall-clock [local] in [zoneId] to a UTC instant and its offset.
-  static ({int utcUs, Duration offset}) _resolveLocal(
+  static ({int utcMs, int microsecond, Duration offset}) _resolveLocal(
     DateTime local,
     String zoneId,
   ) {
@@ -457,6 +463,6 @@ class TzDatetime implements DateTime {
       zoneId,
     );
 
-    return (utcUs: utcMs * 1000 + local.microsecond, offset: offset);
+    return (utcMs: utcMs, microsecond: local.microsecond, offset: offset);
   }
 }

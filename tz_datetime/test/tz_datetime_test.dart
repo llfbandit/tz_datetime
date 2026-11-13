@@ -306,6 +306,13 @@ void main() {
       expect(t.weekday, equals(DateTime.monday));
     });
 
+    test('keeps microseconds past 2^53 µs since epoch', () {
+      // Web ints are doubles, inexact at this size.
+      final t = TzDatetime(la, 3000, 1, 1, 0, 0, 0, 0, 1);
+      expect(t.microsecond, equals(1));
+      expect(t.millisecond, equals(0));
+    });
+
     test('microsecondsSinceEpoch consistent with millisecondsSinceEpoch', () {
       final t = TzDatetime(la, 2010, 3, 15, 7, 30, 45, 123, 456);
       expect(
