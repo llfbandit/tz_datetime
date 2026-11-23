@@ -27,6 +27,7 @@ class TzDatetime implements DateTime {
   /// Offsets with seconds, such as `+00:09:21` or `+000921`, are also accepted.
   ///
   /// The result is always in the time zone of the provided [zoneId].
+  /// A string without an offset is read as wall-clock time in [zoneId].
   static TzDatetime parse(String isoDate, String zoneId) {
     try {
       return _parse(isoDate, zoneId);
@@ -89,6 +90,8 @@ class TzDatetime implements DateTime {
   /// ```dart
   /// TzDatetime('America/Puerto_Rico', 2014, DateTime.april, 29, 6, 4);
   /// ```
+  ///
+  /// A time skipped by a DST change shifts forward by the gap; a repeated time resolves to the earlier instant.
   TzDatetime(
     String zoneId,
     int year, [
@@ -142,7 +145,7 @@ class TzDatetime implements DateTime {
          microsecond,
        );
 
-  /// Constructs a [TzDatetime] instance specified in the local time zone.
+  /// Constructs a [TzDatetime] instance specified in the [local] zone (see [setLocalZone]).
   ///
   /// ```dart
   /// setLocalZone('Europe/Paris'); // local is now globally set.
@@ -194,6 +197,12 @@ class TzDatetime implements DateTime {
         zoneId,
       );
 
+  /// Constructs a new [TzDatetime] instance with the given
+  /// [microsecondsSinceEpoch].
+  ///
+  /// The constructed [TzDatetime] represents
+  /// 1970-01-01T00:00:00Z + [microsecondsSinceEpoch] µs in the given
+  /// time zone [zoneId].
   TzDatetime.fromMicrosecondsSinceEpoch(
     String zoneId,
     int microsecondsSinceEpoch,
@@ -267,15 +276,15 @@ class TzDatetime implements DateTime {
 
   /// Returns an ISO-8601 full-precision extended format representation.
   ///
-  /// The format is yyyy-MM-ddTHH:mm:ss.mmmuuuZ for UTC time, and
-  /// yyyy-MM-ddTHH:mm:ss.mmmuuu±hhmm[ss] for local/non-UTC time.
-  /// Years outside -9999..9999 are printed as ±yyyyyy.
+  /// The format is `yyyy-MM-ddTHH:mm:ss.mmmuuuZ` for UTC time, and
+  /// `yyyy-MM-ddTHH:mm:ss.mmmuuu±hhmm[ss]` for local/non-UTC time.
+  /// Years outside -9999..9999 are printed as `±yyyyyy`.
   @override
   String toIso8601String() => _toString(iso8601: true);
 
-  /// Returns this DateTime value in the local time zone.
+  /// Returns this DateTime value in the [local] zone (see [setLocalZone]).
   ///
-  /// Returns `this` if it is already in the local time zone.
+  /// Returns `this` if it is already in the [local] zone.
   @override
   TzDatetime toLocal() => isLocal ? this : TzDatetime.from(_utcDatetime, local);
 
@@ -321,6 +330,7 @@ class TzDatetime implements DateTime {
   @override
   bool get isUtc => _zoneId == utc;
 
+  /// Whether this is in the [local] zone; follows later [setLocalZone] calls.
   bool get isLocal => _zoneId == local;
 
   @override
@@ -329,7 +339,7 @@ class TzDatetime implements DateTime {
   @override
   Duration get timeZoneOffset => _offset;
 
-  /// Creates a new [TzDatetime] from this one by updating individual properties.
+  /// Copies this with the given fields; the wall-clock time is kept, so a new [zoneId] changes the instant.
   TzDatetime copyWith({
     String? zoneId,
     int? year,
@@ -374,10 +384,8 @@ class TzDatetime implements DateTime {
     return false;
   }
 
-  /// hashCode is derived from the UTC instant only, not the zone.
-  /// Including _zoneId would violate the hash contract when comparing with
-  /// a plain DateTime (which hashes by instant), so the collision trade-off
-  /// is unavoidable while TzDatetime implements DateTime.
+  /// Hashes the instant only, so it matches [DateTime.hashCode] for equal values.
+  // Hashing the zone too would break the contract for == with a plain DateTime.
   @override
   int get hashCode => _utcDatetime.hashCode;
 
