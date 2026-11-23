@@ -200,6 +200,95 @@ void main() {
       final t = TzDatetime.parse('2010-01-02T03:04:05.006007', la);
       expect(t.toString(), equals('2010-01-02 03:04:05.006007-0800'));
     });
+
+    test('parse non-UTC string ignores host DST gaps', () {
+      // Find a wall-clock time the host zone skips, which UTC keeps.
+      DateTime? gap;
+      for (var m = 0; gap == null && m < 366 * 24 * 60; m += 15) {
+        final wall = DateTime.utc(2021, 1, 1, 0, m);
+        final host = DateTime(
+          wall.year,
+          wall.month,
+          wall.day,
+          wall.hour,
+          wall.minute,
+        );
+        if (host.hour != wall.hour || host.minute != wall.minute) gap = wall;
+      }
+      if (gap == null) {
+        markTestSkipped('host zone has no DST gap in 2021');
+        return;
+      }
+
+      final date = gap.toIso8601String().substring(0, 10);
+      final time = gap.toIso8601String().substring(11, 16);
+      final t = TzDatetime.parse('${date}T$time:00', utc);
+      expect(t.toString(), equals('$date $time:00.000Z'));
+      if (gap.hour == 0 && gap.minute == 0) {
+        final d = TzDatetime.parse(date, utc);
+        expect(d.toString(), equals('$date 00:00:00.000Z'));
+      }
+    });
+
+    test('parse string with offset uses from()', () {
+      const utc = '2010-01-01 22:04:05.000-0500';
+      for (final s in [
+        '2010-01-02T03:04:05z',
+        '2010-01-02 03:04:05 Z',
+        '2010-01-02T04:04:05+01',
+        '2010-01-02T04:04:05+01:00',
+        '2010-01-01T21:04:05-0600',
+      ]) {
+        expect(TzDatetime.parse(s, newYork).toString(), equals(utc), reason: s);
+      }
+    });
+
+    test('parse offset with seconds', () {
+      final t = TzDatetime.parse('1905-07-17T00:00:00+00:09:21', 'UTC');
+      expect(t.toString(), equals('1905-07-16 23:50:39.000Z'));
+      final u = TzDatetime.parse('1905-07-17 00:00:00-000921', 'UTC');
+      expect(u.toString(), equals('1905-07-17 00:09:21.000Z'));
+    });
+
+    test('parse reports the original input on failure', () {
+      for (final s in [
+        '2021-02-3x',
+        '2021-02-03T25:xx',
+        '2021-03-28T02:30:00 ',
+        '2021-02-3xT00:00:00+00:09:21',
+        '+275760-09-13T00:30:00',
+        '+275760-09-13T00:00:00-00:09:21',
+      ]) {
+        expect(
+          () => TzDatetime.parse(s, newYork),
+          throwsA(isA<FormatException>().having((e) => e.source, 'source', s)),
+          reason: s,
+        );
+      }
+    });
+
+    test('parse rejects instants outside the DateTime range', () {
+      // Paris was UTC+0:09:21 then, so this is just before the earliest instant.
+      const s = '-271821-04-20T00:00:00';
+      expect(
+        () => TzDatetime.parse(s, 'Europe/Paris'),
+        throwsA(isA<FormatException>().having((e) => e.source, 'source', s)),
+      );
+    });
+
+    test('accepts wall-clock times at the ends of the DateTime range', () {
+      final min = TzDatetime.parse('-271821-04-20T00:00:00', 'UTC');
+      expect(min.toString(), equals('-271821-04-20 00:00:00.000Z'));
+      final max = TzDatetime.utc(275760, 9, 13);
+      expect(max.toString(), equals('275760-09-13 00:00:00.000Z'));
+    });
+
+    test('toString round-trips offset with seconds', () {
+      final paris = 'Europe/Paris';
+      final t = TzDatetime(paris, 1905, 7, 17);
+      expect(t.toString(), equals('1905-07-17 00:00:00.000+000921'));
+      expect(TzDatetime.parse(t.toString(), paris), equals(t));
+    });
   });
 
   group('Properties', () {
@@ -215,6 +304,13 @@ void main() {
       expect(t.millisecond, equals(123));
       expect(t.microsecond, equals(456));
       expect(t.weekday, equals(DateTime.monday));
+    });
+
+    test('keeps microseconds past 2^53 µs since epoch', () {
+      // Web ints are doubles, inexact at this size.
+      final t = TzDatetime(la, 3000, 1, 1, 0, 0, 0, 0, 1);
+      expect(t.microsecond, equals(1));
+      expect(t.millisecond, equals(0));
     });
 
     test('microsecondsSinceEpoch consistent with millisecondsSinceEpoch', () {
@@ -346,6 +442,19 @@ void main() {
       expect(tUtc == dUtc, isTrue);
     });
 
+    test('UTC TzDatetime == UTC DateTime compares microseconds', () {
+      final t = TzDatetime.utc(2020, 1, 1, 0, 0, 0, 0, 1);
+      final d = DateTime.utc(2020);
+      expect(t == d, isFalse);
+      expect(d == t, isFalse);
+      expect(t == DateTime.utc(2020, 1, 1, 0, 0, 0, 0, 1), isTrue);
+
+      // Past 2^53 µs, where web microsecondsSinceEpoch is inexact.
+      final far = TzDatetime.from(DateTime.utc(3000, 1, 1, 0, 0, 0, 0, 1), utc);
+      expect(far == DateTime.utc(3000), isFalse);
+      expect(far == DateTime.utc(3000, 1, 1, 0, 0, 0, 0, 1), isTrue);
+    });
+
     test('non-UTC TzDatetime == UTC DateTime is false despite same instant', () {
       // t1 (LA) and dtUtc have the same millisecondsSinceEpoch but different isUtc
       final dtUtc = DateTime.utc(2010, 1, 2, 11);
@@ -392,6 +501,15 @@ void main() {
     test('toIso8601String UTC uses Z suffix', () {
       final u = TzDatetime.utc(2010, 1, 2, 3, 4, 5, 6, 7);
       expect(u.toIso8601String(), equals('2010-01-02T03:04:05.006007Z'));
+    });
+
+    test('year formatting matches DateTime outside 0..9999', () {
+      for (final y in [-123456, -10000, -9999, -1, 0, 9999, 10000, 123456]) {
+        final t = TzDatetime.utc(y);
+        final d = DateTime.utc(y);
+        expect(t.toIso8601String(), equals(d.toIso8601String()), reason: '$y');
+        expect(t.toString(), equals(d.toString()), reason: '$y');
+      }
     });
 
     // fourDigits() year-padding branches (lines not reached by 4-digit years)

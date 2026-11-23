@@ -36,12 +36,9 @@ class TzDatetimeLinux extends TzifPlatform {
 
   // The root with one trailing slash, also when it is '/'.
   late final _prefix = _root.endsWith('/') ? _root : '$_root/';
-  late final _zoneIds = _listZones();
 
   @override
-  List<String> getAvailableTimezones() => List.of(_zoneIds);
-
-  List<String> _listZones() {
+  List<String> listTimezones() {
     final dir = Directory(_root);
     if (!dir.existsSync()) {
       throw TimeZoneInitException('tzdata not found at $_root');

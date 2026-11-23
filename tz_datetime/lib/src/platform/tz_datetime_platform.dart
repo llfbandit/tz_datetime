@@ -17,43 +17,56 @@ abstract class TzDatetimePlatform {
     _instance = instance;
   }
 
-  List<String> getAvailableTimezones() {
-    throw UnimplementedError(
-      'getAvailableTimezones() has not been implemented.',
-    );
+  late final List<String> _zoneIds = listTimezones();
+
+  /// Returns a copy of the zone list, which is read once per instance.
+  List<String> getAvailableTimezones() => List.of(_zoneIds);
+
+  /// Reads the zone IDs; [getAvailableTimezones] caches the result.
+  List<String> listTimezones() {
+    throw UnimplementedError('listTimezones() has not been implemented.');
   }
 
   Duration getOffset(DateTime date, String zoneId) {
     throw UnimplementedError('getOffset() has not been implemented.');
   }
 
-  /// Converts a wall-clock time to UTC microseconds since epoch for [zoneId].
+  /// Resolves a wall-clock time in [zoneId] to a UTC instant and its offset.
   ///
   /// Uses the offset in effect before a transition, like Python's `fold=0`:
   /// a repeated time resolves to the earlier instant, and a skipped time
   /// shifts forward by the gap length.
   ///
   /// [localAsUtcMs] is `DateTime.utc(year, month, ...).millisecondsSinceEpoch`
-  /// (wall-clock components treated as UTC). [us] is the microsecond component.
-  int localToUtcMicros(int localAsUtcMs, String zoneId, int us) {
-    int offsetMs(int utcMs) => getOffset(
-      DateTime.fromMillisecondsSinceEpoch(utcMs, isUtc: true),
+  /// (wall-clock components treated as UTC).
+  ({int utcMs, Duration offset}) localToUtc(int localAsUtcMs, String zoneId) {
+    Duration offsetAt(int utcMs) => getOffset(
+      // Clamp into the DateTime range; no zone has transitions there.
+      DateTime.fromMillisecondsSinceEpoch(
+        utcMs.clamp(-_maxMs, _maxMs),
+        isUtc: true,
+      ),
       zoneId,
-    ).inMilliseconds;
+    );
 
     // A day away is past any transition near this wall-clock time.
     const day = 86400000;
-    final before = offsetMs(localAsUtcMs - day);
-    final after = offsetMs(localAsUtcMs + day);
+    final before = offsetAt(localAsUtcMs - day);
+    final earlier = localAsUtcMs - before.inMilliseconds;
+    final earlierOffset = offsetAt(earlier);
+    if (earlierOffset == before) return (utcMs: earlier, offset: before);
 
-    var resultMs = localAsUtcMs - before;
-    if (before != after && offsetMs(resultMs) != before) {
-      final later = localAsUtcMs - after;
-      // Neither offset fits in a gap, so keep the pre-gap one.
-      if (offsetMs(later) == after) resultMs = later;
+    final after = offsetAt(localAsUtcMs + day);
+    if (after != before) {
+      final later = localAsUtcMs - after.inMilliseconds;
+      if (offsetAt(later) == after) return (utcMs: later, offset: after);
     }
-    return resultMs * 1000 + us;
+    // Skipped time: take the pre-gap instant, which lands after the gap.
+    return (utcMs: earlier, offset: earlierOffset);
   }
+
+  /// Largest millisecondsSinceEpoch a [DateTime] accepts.
+  static const _maxMs = 8640000000000000;
 }
 
 class _TzDatetimePlatformStub extends TzDatetimePlatform {}

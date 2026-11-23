@@ -24,25 +24,61 @@ class TzDatetime implements DateTime {
   /// The function parses a subset of ISO 8601
   /// which includes the subset accepted by RFC 3339.
   ///
+  /// Offsets with seconds, such as `+00:09:21` or `+000921`, are also accepted.
+  ///
   /// The result is always in the time zone of the provided [zoneId].
+  /// A string without an offset is read as wall-clock time in [zoneId].
   static TzDatetime parse(String isoDate, String zoneId) {
-    final dt = DateTime.parse(isoDate);
+    try {
+      return _parse(isoDate, zoneId);
+    } on FormatException catch (e, st) {
+      Error.throwWithStackTrace(FormatException(e.message, isoDate), st);
+    }
+  }
 
-    if (dt.isUtc) {
-      return TzDatetime.from(dt, zoneId);
+  /// Runs [build], reporting a DateTime range error as a [FormatException].
+  static T _inRange<T>(T Function() build) {
+    try {
+      return build();
+    } on ArgumentError {
+      // Valid fields can still name an instant outside the DateTime range.
+      throw const FormatException('Time out of range');
+    }
+  }
+
+  static TzDatetime _parse(String isoDate, String zoneId) {
+    final match = _offsetWithSeconds.firstMatch(isoDate);
+    if (match != null) {
+      final offset = Duration(
+        hours: int.parse(match[3]!),
+        minutes: int.parse(match[5]!),
+        seconds: int.parse(match[6]!),
+      );
+      final dt = DateTime.parse('${match[1]}Z');
+      return _inRange(
+        () => TzDatetime.from(
+          match[2] == '-' ? dt.add(offset) : dt.subtract(offset),
+          zoneId,
+        ),
+      );
     }
 
-    return TzDatetime(
-      zoneId,
-      dt.year,
-      dt.month,
-      dt.day,
-      dt.hour,
-      dt.minute,
-      dt.second,
-      dt.millisecond,
-      dt.microsecond,
+    if (_zoneDesignator.hasMatch(isoDate)) {
+      final dt = DateTime.parse(isoDate);
+      return _inRange(() => TzDatetime.from(dt, zoneId));
+    }
+
+    // A trailing space is invalid but becomes valid before an added 'Z'.
+    if (isoDate.endsWith(' ')) {
+      throw const FormatException('Invalid date format');
+    }
+    // Parse wall-clock fields as UTC so the host zone can't shift or reject them.
+    final dt = DateTime.parse(
+      isoDate.contains(_dateTimeSeparator) ? '${isoDate}Z' : '${isoDate}T00Z',
     );
+
+    final resolved = _resolveLocal(dt, zoneId);
+    return _inRange(() => TzDatetime._wallClock(zoneId, resolved));
   }
 
   /// Constructs a [TzDatetime] instance specified at [zoneId].
@@ -54,6 +90,8 @@ class TzDatetime implements DateTime {
   /// ```dart
   /// TzDatetime('America/Puerto_Rico', 2014, DateTime.april, 29, 6, 4);
   /// ```
+  ///
+  /// A time skipped by a DST change shifts forward by the gap; a repeated time resolves to the earlier instant.
   TzDatetime(
     String zoneId,
     int year, [
@@ -64,8 +102,9 @@ class TzDatetime implements DateTime {
     int second = 0,
     int millisecond = 0,
     int microsecond = 0,
-  ]) : this.from(
-         _utcFromLocalDateTime(
+  ]) : this._wallClock(
+         zoneId,
+         _resolveLocal(
            DateTime.utc(
              year,
              month,
@@ -78,7 +117,6 @@ class TzDatetime implements DateTime {
            ),
            zoneId,
          ),
-         zoneId,
        );
 
   /// Constructs a [TzDatetime] instance specified in the UTC time zone.
@@ -107,7 +145,7 @@ class TzDatetime implements DateTime {
          microsecond,
        );
 
-  /// Constructs a [TzDatetime] instance specified in the local time zone.
+  /// Constructs a [TzDatetime] instance specified in the [local] zone (see [setLocalZone]).
   ///
   /// ```dart
   /// setLocalZone('Europe/Paris'); // local is now globally set.
@@ -159,6 +197,12 @@ class TzDatetime implements DateTime {
         zoneId,
       );
 
+  /// Constructs a new [TzDatetime] instance with the given
+  /// [microsecondsSinceEpoch].
+  ///
+  /// The constructed [TzDatetime] represents
+  /// 1970-01-01T00:00:00Z + [microsecondsSinceEpoch] µs in the given
+  /// time zone [zoneId].
   TzDatetime.fromMicrosecondsSinceEpoch(
     String zoneId,
     int microsecondsSinceEpoch,
@@ -172,6 +216,19 @@ class TzDatetime implements DateTime {
 
   TzDatetime.from(DateTime other, String zoneId)
     : this._(_toNative(other).toUtc(), zoneId, getOffset(other, zoneId));
+
+  TzDatetime._wallClock(
+    String zoneId,
+    ({int utcMs, int microsecond, Duration offset}) resolved,
+  ) : this._(
+        // Keep ms and µs apart like DateTime; ms * 1000 + µs rounds on the web.
+        DateTime.fromMillisecondsSinceEpoch(
+          resolved.utcMs,
+          isUtc: true,
+        ).add(Duration(microseconds: resolved.microsecond)),
+        zoneId,
+        resolved.offset,
+      );
 
   TzDatetime._(this._utcDatetime, this._zoneId, this._offset)
     : _localDatetime = _utcDatetime.add(_offset);
@@ -219,14 +276,15 @@ class TzDatetime implements DateTime {
 
   /// Returns an ISO-8601 full-precision extended format representation.
   ///
-  /// The format is yyyy-MM-ddTHH:mm:ss.mmmuuuZ for UTC time, and
-  /// yyyy-MM-ddTHH:mm:ss.mmmuuu±hhmm for local/non-UTC time.
+  /// The format is `yyyy-MM-ddTHH:mm:ss.mmmuuuZ` for UTC time, and
+  /// `yyyy-MM-ddTHH:mm:ss.mmmuuu±hhmm[ss]` for local/non-UTC time.
+  /// Years outside -9999..9999 are printed as `±yyyyyy`.
   @override
   String toIso8601String() => _toString(iso8601: true);
 
-  /// Returns this DateTime value in the local time zone.
+  /// Returns this DateTime value in the [local] zone (see [setLocalZone]).
   ///
-  /// Returns `this` if it is already in the local time zone.
+  /// Returns `this` if it is already in the [local] zone.
   @override
   TzDatetime toLocal() => isLocal ? this : TzDatetime.from(_utcDatetime, local);
 
@@ -272,6 +330,7 @@ class TzDatetime implements DateTime {
   @override
   bool get isUtc => _zoneId == utc;
 
+  /// Whether this is in the [local] zone; follows later [setLocalZone] calls.
   bool get isLocal => _zoneId == local;
 
   @override
@@ -280,7 +339,7 @@ class TzDatetime implements DateTime {
   @override
   Duration get timeZoneOffset => _offset;
 
-  /// Creates a new [TzDatetime] from this one by updating individual properties.
+  /// Copies this with the given fields; the wall-clock time is kept, so a new [zoneId] changes the instant.
   TzDatetime copyWith({
     String? zoneId,
     int? year,
@@ -320,16 +379,13 @@ class TzDatetime implements DateTime {
           _zoneId == other._zoneId;
     }
     if (other is DateTime) {
-      return millisecondsSinceEpoch == other.millisecondsSinceEpoch &&
-          isUtc == other.isUtc;
+      return _utcDatetime.isAtSameMomentAs(other) && isUtc == other.isUtc;
     }
     return false;
   }
 
-  /// hashCode is derived from the UTC instant only, not the zone.
-  /// Including _zoneId would violate the hash contract when comparing with
-  /// a plain DateTime (which hashes by instant), so the collision trade-off
-  /// is unavoidable while TzDatetime implements DateTime.
+  /// Hashes the instant only, so it matches [DateTime.hashCode] for equal values.
+  // Hashing the zone too would break the contract for == with a plain DateTime.
   @override
   int get hashCode => _utcDatetime.hashCode;
 
@@ -357,7 +413,17 @@ class TzDatetime implements DateTime {
       return '0$n';
     }
 
-    final y = fourDigits(year);
+    String sixDigits(int n) {
+      final absN = n.abs();
+      final sign = n < 0 ? '-' : '+';
+      if (absN >= 100000) return '$sign$absN';
+      return '${sign}0$absN';
+    }
+
+    // Like DateTime, only ISO-8601 uses the expanded ±yyyyyy year.
+    final y = iso8601 && (year < -9999 || year > 9999)
+        ? sixDigits(year)
+        : fourDigits(year);
     final m = twoDigits(month);
     final d = twoDigits(day);
     final sep = iso8601 ? 'T' : ' ';
@@ -374,24 +440,37 @@ class TzDatetime implements DateTime {
       final offsetSeconds = _offset.abs().inSeconds;
       final offH = twoDigits(offsetSeconds ~/ 3600);
       final offM = twoDigits((offsetSeconds % 3600) ~/ 60);
+      final offS = offsetSeconds % 60 == 0 ? '' : twoDigits(offsetSeconds % 60);
 
-      return '$y-$m-$d$sep$h:$min:$sec.$ms$us$offSign$offH$offM';
+      return '$y-$m-$d$sep$h:$min:$sec.$ms$us$offSign$offH$offM$offS';
     }
   }
+
+  /// Matches a trailing ±hhmmss or ±hh:mm:ss offset, which [DateTime] rejects.
+  static final _offsetWithSeconds = RegExp(
+    r'^(.+[T ].*\d) ?([+-])(\d\d)(:?)(\d\d)\4(\d\d)$',
+  );
+
+  static final _dateTimeSeparator = RegExp('[T ]');
+
+  /// Matches a 'Z' or ±offset after the time; the time itself has neither.
+  static final _zoneDesignator = RegExp('[T ].*[zZ+-]');
 
   /// Returns the native [DateTime] object.
   static DateTime _toNative(DateTime t) => t is TzDatetime ? t._utcDatetime : t;
 
-  /// Converts a [_localDateTime] into a correct [DateTime].
-  static DateTime _utcFromLocalDateTime(DateTime local, String zoneId) {
+  /// Resolves wall-clock [local] in [zoneId] to a UTC instant and its offset.
+  static ({int utcMs, int microsecond, Duration offset}) _resolveLocal(
+    DateTime local,
+    String zoneId,
+  ) {
     register();
 
-    final us = TzDatetimePlatform.instance.localToUtcMicros(
+    final (:utcMs, :offset) = TzDatetimePlatform.instance.localToUtc(
       local.millisecondsSinceEpoch,
       zoneId,
-      local.microsecond,
     );
 
-    return DateTime.fromMicrosecondsSinceEpoch(us, isUtc: true);
+    return (utcMs: utcMs, microsecond: local.microsecond, offset: offset);
   }
 }

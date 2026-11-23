@@ -1,3 +1,13 @@
+## 1.2.1
+
+* fix: Parse and print UTC offsets with seconds for historical dates.
+* fix: Parse offset-less strings independently of the host time zone.
+* fix: Compare microseconds when checking equality with a DateTime.
+* fix: Print expanded years in toIso8601String like DateTime.
+* perf: Reuse the resolved offset when constructing from wall-clock time.
+* perf(web): Cache the list of available time zones.
+* fix(web): Keep microseconds when constructing dates after 2255.
+
 ## 1.2.0
 
 * feat: Export LocationNotFoundException and TimeZoneInitException.
@@ -15,7 +25,6 @@
 * feat: Remove Flutter dependencies.
 * fix: Parsing.
 * fix: spring-forward gap.
-* chore: Reaches 100% coverage.
 
 ## 1.0.2
 

@@ -1,64 +1,53 @@
 # tz_datetime
 
-A lightweight, cross-platform timezone-aware datetime package for Dart and Flutter applications.
-
-This package serves as an alternative to the [Timezone](https://pub.dev/packages/timezone) package with enhanced performance characteristics and improved resource efficiency.
+Time-zone-aware `DateTime` for Dart and Flutter, backed by each platform's own time zone database.  
+An alternative to [timezone](https://pub.dev/packages/timezone) with a similar API.
 
 ## Key Benefits
 
-- **App Size**: No embedded IANA database in your app, keeping your application footprint small
-- **Memory Efficiency**: IANA database is not loaded into memory, reducing RAM usage
-- **Fast Startup**: Nothing to load before working with dates & timezones, improving app launch times
-- **Native Integration**: Provides seamless calls to dedicated platform APIs
-- **Complete Data**: No compromise on truncated databases - full timezone information available
-- **No Dependencies**: Pure Dart, calling platform APIs directly through `dart:ffi` and `dart:js_interop`
-
-## API Compatibility
-
-The API is designed to be very similar to the [Timezone](https://pub.dev/packages/timezone) package, making migration straightforward.
-
-Tests are adapted from the original package to ensure reliability and compatibility.
+- **Small**: no IANA database bundled in your app or loaded into memory, nothing to initialize.
+- **Up to date**: uses the OS database, so zone rules follow system updates.
+- **No dependencies**: pure Dart over `dart:ffi` and `dart:js_interop`.
+- **Drop-in**: `TzDatetime` implements `DateTime`.
 
 ## Usage
 
 ```dart
 import 'package:tz_datetime/tz_datetime.dart';
 
-void main() {
-  final la = 'America/Los_Angeles';
-  final ny = 'America/New_York';
+final la = 'America/Los_Angeles';
+final ny = 'America/New_York';
 
-  // Retrieve all available zones from platform
-  final zones = TzDatetime.getAvailableTimezones();  // [Africa/Abidjan, Europe/Athens, ...]
-  
-  // Get offset from any date with Daylight Saving Times
-  Duration offset = TzDatetime.getOffset(DateTime.now(), la);  // -8:00:00.000000
+final zones = TzDatetime.getAvailableTimezones();  // [Africa/Abidjan, Europe/Athens, ...]
+final offset = TzDatetime.getOffset(DateTime.now(), la);  // -8:00:00.000000
 
-  final laTime = TzDatetime.now(la);  // 2026-02-09T03:17:03.964038-0800
+final laTime = TzDatetime.now(la);  // 2026-02-09T03:17:03.964038-0800
+final nyTime = TzDatetime.from(laTime, ny);  // 2026-02-09T06:17:03.964038-0500
 
-  final nyTime = TzDatetime.from(laTime, ny);  // 2026-02-09T06:17:03.964038-0500
-}
+setLocalZone(ny);  // sets ny as the local zone (default: UTC)
+TzDatetime.local(2026, 1, 1);  // uses the zone set above
 ```
 
-For more, see the API documentation.
+Times skipped by a DST change shift forward by the gap; repeated times resolve to the earlier
+instant:
+
+```dart
+TzDatetime(ny, 2026, 3, 8, 2, 30);  // 2026-03-08T03:30:00.000-0400 (02:30 is skipped)
+```
+
+Unknown zones throw `LocationNotFoundException`.
 
 ## Platform Support
 
-| Platform | Database Type                                         | Requirement
-|----------|-------------------------------------------------------|-------
-| Android  | Native                                                | SDK 21.0+
-| iOS      | Native                                                | SDK 8.0+
-| Linux    | Native                                                | tzdata in `$TZDIR`, `/usr/share/zoneinfo` or `/etc/zoneinfo`
-| macOS    | Native                                                | SDK 10.10+
-| Web      | Native                                                | Chrome 99+, Firefox 93+, Safari 15.4+ (2022)
-| Windows  | Native                                                | Windows 10 1703+ (2017)
-
-On all platforms, the package leverages native system timezone databases for accuracy and efficiency.
-
-## Contributing
-
-Contributions are always welcome!
+| Platform | Requirement |
+|----------|-------------|
+| Android  | SDK 21+ |
+| iOS      | 8.0+ |
+| macOS    | 10.10+ |
+| Windows  | 10 1703+ |
+| Linux    | tzdata in `$TZDIR`, `/usr/share/zoneinfo` or `/etc/zoneinfo` |
+| Web      | Chrome 99+, Firefox 93+, Safari 15.4+ |
 
 ## License
 
-This project is licensed under the BSD license.
+This project is licensed under the BSD 2-Clause license.
